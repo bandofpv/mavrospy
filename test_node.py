@@ -53,21 +53,27 @@ if __name__ == "__main__":
     arm_cmd = CommandBoolRequest()
     arm_cmd.value = True
 
-    # last_req = rospy.Time.now()
+    last_req = rospy.Time.now()
 
     while not rospy.is_shutdown() and current_state.mode != "OFFBOARD":
         if current_state.mode == "OFFBOARD":
             rospy.loginfo("OFFBOARD enabled")
             break
 
+        local_pos_pub.publish(pose)
+
+        last_req = rospy.Time.now()
+
         rate.sleep()
 
     while not rospy.is_shutdown() and current_state.mode == "OFFBOARD":
-        if not current_state.armed:
-            if arm_service(True).success:
+        if not current_state.armed and (rospy.Time.now() - last_req) > rospy.Duration(5.0):
+            if arm_service.call(arm_cmd).success:
                 rospy.loginfo("Vehicle armed")
 
         local_pos_pub.publish(pose)
+
+        last_req = rospy.Time.now()
 
         rate.sleep()
 
