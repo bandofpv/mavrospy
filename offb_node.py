@@ -1,8 +1,3 @@
-"""
- * File: offb_node.py
- * Stack and tested in Gazebo Classic 9 SITL
-"""
-
 #! /usr/bin/env python
 
 import rospy
