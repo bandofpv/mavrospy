@@ -62,19 +62,21 @@ if __name__ == "__main__":
 
         local_pos_pub.publish(pose)
 
-        last_req = rospy.Time.now()
-
         rate.sleep()
 
     while not rospy.is_shutdown() and current_state.mode == "OFFBOARD":
         if not current_state.armed and (rospy.Time.now() - last_req) > rospy.Duration(5.0):
+            rospy.loginfo("Arm Attempt")
+
             if arm_service.call(arm_cmd).success:
                 rospy.loginfo("Vehicle armed")
 
-        local_pos_pub.publish(pose)
+            last_req = rospy.Time.now()
 
-        last_req = rospy.Time.now()
+        local_pos_pub.publish(pose)
 
         rate.sleep()
 
+    rospy.loginfo("Arming")
+    exec(arm_service(True))
     rospy.loginfo("OFFBOARD disabled")
