@@ -93,7 +93,7 @@ class MavController:
         pose.position.y = y
         pose.position.z = z
 
-        quat = tf.transformations.quaternion_from_euler(ro, pi, ya + self.pi_2)
+        quat = tf.transformations.quaternion_from_euler(ro, pi, ya + self.pi_2)  # why +pi_2??
 
         pose.orientation.x = quat[0]
         pose.orientation.y = quat[1]
