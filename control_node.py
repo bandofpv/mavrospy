@@ -108,7 +108,12 @@ class MavController:
         """
         for i in range(timeout * self.freq):
             self.arm_service(True)
+            if self.current_state.armed:
+                rospy.loginfo("Armed")
+                return True
             self.rate.sleep()
+
+        rospy.logerr("Failed To Arm")
 
     def disarm(self):
         """
@@ -143,7 +148,7 @@ class MavController:
                 break
             self.rate.sleep()
 
-        rospy.loginfo("Change Mode: Land")
+        rospy.loginfo("Changed Mode: Land")
 
         self.disarm()
         rospy.loginfo("Disarmed")
