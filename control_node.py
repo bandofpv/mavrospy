@@ -30,12 +30,12 @@ class MavController:
         self.cmd_vel_pub = rospy.Publisher("/mavros/setpoint_velocity/cmd_vel_unstamped", Twist, queue_size=1)
 
         # self.rc_override = rospy.Publisher("/mavros/rc/override", OverrideRCIn, queue_size=1)
-        try:
-            rospy.wait_for_service("/mavros/cmd/set_mode")
-            # rospy.wait_for_service("/mavros/cmd/takeoff")
-            rospy.wait_for_service("/mavros/cmd/arming")
-        except rospy.ROSException:
-            rospy.logerr("Failed to connect to services")
+        # try:
+        #     rospy.wait_for_service("/mavros/cmd/set_mode")
+        #     # rospy.wait_for_service("/mavros/cmd/takeoff")
+        #     rospy.wait_for_service("/mavros/cmd/arming")
+        # except rospy.ROSException:
+        #     rospy.logerr("Failed to connect to services")
 
         self.mode_service = rospy.ServiceProxy('/mavros/set_mode', SetMode)
         self.arm_service = rospy.ServiceProxy('/mavros/cmd/arming', CommandBool)
@@ -53,6 +53,8 @@ class MavController:
         # Wait for Flight Controller connection
         while not rospy.is_shutdown() and not self.current_state.connected:
             self.rate.sleep()
+
+        rospy.loginfo("MAVROS Controller Initiated")
 
     # def rc_callback(self, data):
     #     """
