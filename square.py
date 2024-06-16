@@ -13,17 +13,17 @@ def simple_demo():
 
     c = MavController(rate)
     # rospy.sleep(1)
-    alt = 5.0
+    alt = 3.0
 
     while not rospy.is_shutdown():
         if c.current_state.mode == "OFFBOARD":
             rospy.loginfo("OFFBOARD enabled")
             break
 
-        c.goto_xyz_rpy(0.0, 0.0, 0.0, 0, 0, 0, 1/rate)
+        c.goto_xyz_rpy(0.0, 0.0, 0.0, 0, 0, 0, 0, False)
 
     rospy.loginfo(f"Takeoff: {alt}m")
-    c.takeoff(alt, 5)
+    c.takeoff(alt, 8)
 
     rospy.loginfo("Waypoint 1: position control")
     c.goto_xyz_rpy(0.0, 0.0, alt, 0, 0, -1 * c.pi_2, 2)

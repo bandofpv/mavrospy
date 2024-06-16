@@ -87,7 +87,7 @@ class MavController:
 
         self.cmd_pos_pub.publish(pose_stamped)
 
-    def goto_xyz_rpy(self, x, y, z, ro, pi, ya, timeout):
+    def goto_xyz_rpy(self, x, y, z, ro, pi, ya, timeout, loop=True):
         pose = Pose()
         pose.position.x = x
         pose.position.y = y
@@ -100,7 +100,11 @@ class MavController:
         pose.orientation.z = quat[2]
         pose.orientation.w = quat[3]
 
-        for i in range(timeout * self.freq):
+        if loop:
+            for i in range(timeout * self.freq):
+                self.goto(pose)
+                self.rate.sleep()
+        else:
             self.goto(pose)
             self.rate.sleep()
 

@@ -28,7 +28,7 @@ def simple_demo():
         x = 0.2 + r * math.cos(theta)
         y = 0.3 + r * math.sin(theta)
         z = alt
-        c.goto_xyz_rpy(x, y, z, 0.0, 0.0, theta, 1 / rate)
+        c.goto_xyz_rpy(x, y, z, 0.0, 0.0, theta, 0, False)
 
     c.goto_xyz_rpy(0.0, 0.0, alt, 0, 0, 0, 3)
 
