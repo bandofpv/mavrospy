@@ -77,6 +77,6 @@ if __name__ == "__main__":
 
         rate.sleep()
 
-    rospy.loginfo("Arming")
-    exec(arm_service(True))
+    # rospy.loginfo("Arming")
+    # exec(arm_service(True))
     rospy.loginfo("OFFBOARD disabled")

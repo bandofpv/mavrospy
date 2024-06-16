@@ -1,21 +1,21 @@
 # rospi
-Test repo for mavros scripts on board my rpi
+Test repo for mavros scripts on board my rpi4
 
 ## Setup:
 
 ### Wiring
 
-This setup connects RPi to the Cube's `TELEM2` port, which is generally recommended for offboard control.
+This setup connects the RPi4 to the Cube's `TELEM2` port, which is generally recommended for offboard control.
 
-Connect the Pixhawk `TELEM2` `TX`/`RX`/`GND` pins to the complementary `RXD`/`TXD`/`Ground` pins on the RPi GPIO board:
+Connect the Cube's `TELEM2` `TX`/`RX`/`GND` pins to the complementary `RXD`/`TXD`/`Ground` pins on the RPi4 GPIO board:
 
-| PX4 TELEM2 Pin | RPi GPIO Pin           |
+| PX4 TELEM2 Pin | RPi4 GPIO Pin           |
 | -------------- | ---------------------- |
 | UART5_TX (2)   | RXD (GPIO 15 - pin 10) |
 | UART5_RX (3)   | TXD (GPIO 14 - pin 8)  |
 | GND (6)        | Ground (pin 6)         |
 
-This diagram shows the RPi GPIO board pinout:
+This diagram shows the RPi4 GPIO board pinout:
 
 ![](assets/rpi_gpio.png)
 
@@ -30,7 +30,7 @@ The standard `TELEM2` pin assignments are shown below:
 | 5 (Black) | UART5_RTS (in)  | +3.3V   |
 | 6 (Black) | GND             | GND     |
 
-The RPi requires a separate 5V/3A power supply via the `5V power` and `Ground` pins. I would recommend soldering a 
+The RPi4 requires a separate 5V/3A power supply via the `5V power` and `Ground` pins. I would recommend soldering a 
 battery elimination circuit (BEC) to your UAV's power leads.
 
 ### PX4 Parameters
@@ -48,10 +48,10 @@ Assuming you have installed the latest PX4
 ### Enable UART Communication
 
 This repository runs on ROS1 and is supported on ROS Noetic. If you haven't already, please install 
-[Ubuntu MATE 20.04](https://releases.ubuntu-mate.org/20.04/arm64/) for the RPi (arm64) using the 
+[Ubuntu MATE 20.04](https://releases.ubuntu-mate.org/20.04/arm64/) for the RPi4 (arm64) using the 
 [Raspberry Pi Imager](https://www.raspberrypi.com/software/). 
 
-Now, we need to enable UART communication on the RPi's GPIO pins.
+Now, we need to enable UART communication on the RPi4's GPIO pins.
 
 Open the firmware boot configuration file:
 
@@ -94,7 +94,8 @@ Run MAVProxy, setting the port to connect to `/dev/ttyserial0` and the baud rate
 $ sudo mavproxy.py --master=/dev/serial0 --baudrate 57600
 ```
 
-MAVProxy on the RPi should now connect to the Cube via its RX/TX pins. You should be able to see this in the RPi terminal.
+MAVProxy on the RPi should now connect to the Cube via its RX/TX pins. You should be able to see this in the 
+RPi terminal.
 
 ### TODO: DO I NEED PX4 INSTALL???
 

@@ -51,7 +51,7 @@ class MavController:
         self.rate = rospy.Rate(send_rate)
 
         # Wait for Flight Controller connection
-        while not self.current_state.connected:
+        while not rospy.is_shutdown() and not self.current_state.connected:
             self.rate.sleep()
 
     # def rc_callback(self, data):
@@ -102,17 +102,19 @@ class MavController:
             self.goto(pose)
             self.rate.sleep()
 
-    def arm(self):
+    def arm(self, timeout=5):
         """
         Arm the throttle
         """
-        return self.arm_service(True)
+        for i in range(timeout * self.freq):
+            self.arm_service(True)
+            self.rate.sleep()
 
     def disarm(self):
         """
         Disarm the throttle
         """
-        return self.arm_service(False)
+        self.arm_service(False)
 
     def takeoff(self, height, timeout):
         """
@@ -141,6 +143,12 @@ class MavController:
                 break
             self.rate.sleep()
 
+        rospy.loginfo("Change Mode: Land")
+
         self.disarm()
+        rospy.loginfo("Disarmed")
 
         # return resp
+
+# TODO: add try and except to avoid errors
+

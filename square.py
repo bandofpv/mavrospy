@@ -15,12 +15,14 @@ def simple_demo():
     # rospy.sleep(1)
     alt = 2.0
 
-    while not rospy.is_shutdown() and c.current_state.mode != "OFFBOARD":
+    while not rospy.is_shutdown():
         if c.current_state.mode == "OFFBOARD":
             rospy.loginfo("OFFBOARD enabled")
             break
 
-    rospy.loginfo("Takeoff " + str(alt))
+        rospy.sleep(0.5)
+
+    rospy.loginfo(f"Takeoff: {alt}m")
     c.takeoff(alt, 5)
 
     rospy.loginfo("Waypoint 1: position control")
