@@ -74,18 +74,21 @@ class MavController:
 
         self.cmd_pos_pub.publish(pose_stamped)
 
-    def goto_xyz_rpy(self, x, y, z, ro, pi, ya, timeout, loop=True):
+    def goto_xyz_rpy(self, x, y, z, roll, pitch, yaw, timeout, loop=True):
         pose = Pose()
         pose.position.x = x
         pose.position.y = y
         pose.position.z = z
 
-        quat = tf.transformations.quaternion_from_euler(ro, pi, ya + self.pi_2)  # why +pi_2??
+        quaternion = tf.transformations.quaternion_from_euler(roll, pitch, yaw + self.pi_2)  # why +pi_2??
 
-        pose.orientation.x = quat[0]
-        pose.orientation.y = quat[1]
-        pose.orientation.z = quat[2]
-        pose.orientation.w = quat[3]
+        pose.orientation.x = quaternion[0]
+        pose.orientation.y = quaternion[1]
+        pose.orientation.z = quaternion[2]
+        pose.orientation.w = quaternion[3]
+
+        # try
+        # pose.orientation = Quaternion(*quaternion)
 
         if loop:
             for i in range(timeout * self.freq):
