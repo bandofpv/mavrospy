@@ -7,13 +7,11 @@ from mavros_msgs.srv import CommandBool, CommandBoolRequest, SetMode, SetModeReq
 from pymavlink import mavutil
 
 # from mavros_msgs.srv import CommandTOL
-# from mavros_msgs.msg import OverrideRCIn
-# from mavros_msgs.msg import RCIn
 
 
 class MavController:
     """
-    A simple object to help interface with mavros
+    Controller class to help interface with mavros
     """
 
     def __init__(self, send_rate):
@@ -24,12 +22,11 @@ class MavController:
         rospy.Subscriber("/mavros/local_position/pose", PoseStamped, self.pose_callback)
 
         rospy.Subscriber("/mavros/extended_state", ExtendedState, self.extended_state_callback)
-        # rospy.Subscriber("/mavros/rc/in", RCIn, self.rc_callback)
 
         self.cmd_pos_pub = rospy.Publisher("/mavros/setpoint_position/local", PoseStamped, queue_size=1)
         self.cmd_vel_pub = rospy.Publisher("/mavros/setpoint_velocity/cmd_vel_unstamped", Twist, queue_size=1)
 
-        # self.rc_override = rospy.Publisher("/mavros/rc/override", OverrideRCIn, queue_size=1)
+        # TODO: fix try and expect waits for services
         # try:
         #     rospy.wait_for_service("/mavros/cmd/set_mode")
         #     # rospy.wait_for_service("/mavros/cmd/takeoff")
@@ -40,10 +37,10 @@ class MavController:
         self.mode_service = rospy.ServiceProxy('/mavros/set_mode', SetMode)
         self.arm_service = rospy.ServiceProxy('/mavros/cmd/arming', CommandBool)
         # self.takeoff_service = rospy.ServiceProxy('/mavros/cmd/takeoff', CommandTOL)
+        # TODO: implement takeoff service to takeoff using current heading
 
         self.current_state = State()
         self.current_extended_state = ExtendedState()
-        # self.rc = RCIn()
         self.pose = Pose()
         self.timestamp = rospy.Time()
         self.pi_2 = math.pi / 2.0
@@ -56,12 +53,6 @@ class MavController:
 
         rospy.loginfo("MAVROS Controller Initiated")
 
-    # def rc_callback(self, data):
-    #     """
-    #     Keep track of the current manual RC values
-    #     """
-    #     self.rc = data
-
     def state_callback(self, data):
         self.current_state = data
 
@@ -69,17 +60,13 @@ class MavController:
         self.current_extended_state = data
 
     def pose_callback(self, data):
-        """
-        Handle local position information
-        """
         self.timestamp = data.header.stamp
         self.pose = data.pose
 
     def goto(self, pose):
         """
-        Set the given pose as a next set point by sending
-        a SET_POSITION_TARGET_LOCAL_NED message. The copter must
-        be in OFFBOARD mode for this to work.
+        Set the given pose as a next set point by sending a SET_POSITION_TARGET_LOCAL_NED message. The copter must be in
+        OFFBOARD mode for this to work.
         """
         pose_stamped = PoseStamped()
         pose_stamped.header.stamp = self.timestamp
@@ -129,7 +116,7 @@ class MavController:
 
     def takeoff(self, height, timeout):
         """
-        Set to offboard mode, arm the throttle, and takeoff to a few feet
+        Arm the throttle and takeoff to a few feet
         """
         # Set to offboard mode
         # mode_resp = self.mode_service(custom_mode="OFFBOARD")
@@ -145,8 +132,7 @@ class MavController:
 
     def land(self):
         """
-        Set in LAND mode, which should cause the UAV to descend directly,
-        land, and disarm.
+        Set mode to AUTO.LAND for immediate descent and disarm when on ground.
         """
         while True:
             self.mode_service(custom_mode="AUTO.LAND")
