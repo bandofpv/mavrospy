@@ -274,7 +274,7 @@ Create a system service to source all the appropriate environment variables and 
 $ sudo nano /etc/systemd/system/roscore.service
 ```
 
-Put the following lines into the file:
+Put the following lines into the file, changing `your_robots_user` to your username:
 
 ```
 [Unit]
@@ -283,7 +283,7 @@ After=network-online.target
 
 [Service]
 Type=forking
-User=%u
+User=your_robots_user
 ExecStart=/bin/sh -c ". /opt/ros/noetic/setup.sh; . /etc/ros/env.sh; roscore & while ! echo exit | nc localhost 11311 > /dev/null; do sleep 1; done"
 
 [Install]
@@ -298,17 +298,17 @@ Create a system service to source all the mavrospy environment variables and run
 $ sudo nano /usr/sbin/mavrospy_auto_launch
 ```
 
-Put the following lines into the file:
+Put the following lines into the file, changing both occurrences of `your_robots_user` to your username:
 
 ```
 #!/bin/bash
-source ~/catkin_ws/devel/setup.bash
+source $(echo ~your_robots_user)/catkin_ws/devel/setup.bash
 
 source /etc/ros/env.sh
 
-export ROS_HOME=~/.ros
+export ROS_HOME=$(echo ~your_robots_user)/.ros
 
-roslaunch mavrospy control_test.launch --wait
+roslaunch mavrospy control_test.launch fcu_url:=/dev/serial0:57600 --wait
 
 exit 125
 ```
@@ -327,10 +327,10 @@ $ sudo chmod +x /usr/sbin/mavrospy_auto_launch
 Create a system process to call the shell script above:
 
 ```
-sudo nano /etc/systemd/system/ros_package.service
+$ sudo nano /etc/systemd/system/ros_package.service
 ```
 
-Put the following lines into the file:
+Put the following lines into the file, changing `your_robots_user` to your username:
 
 ```
 [Unit]
@@ -339,7 +339,7 @@ After=network-online.target roscore.service
 
 [Service]
 Type=simple
-User=%u
+User=your_robots_user
 ExecStart=/usr/sbin/mavrospy_auto_launch
 
 [Install]
@@ -365,4 +365,4 @@ $ sudo systemctl status ros_package.service
 
 You should see `Active: active (running)` somewhere in the status report. **CTRL+C** to exit.
 
-### now what...
+### now what... 
