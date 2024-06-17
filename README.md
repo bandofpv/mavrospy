@@ -1,13 +1,21 @@
-# rospi
-Test repo for mavros scripts on board my rpi4
+# mavrospy
+ROS node to interact with [MAVROS](https://wiki.ros.org/mavros) for basic UAV control.
+
+This current repo is supported on a PX4 flight controller with a RPi4 companion computer running Ubuntu 20.04 MATE with ROS Noetic. 
+
+## Usage:
+
+### TODO: TALK ABOUT HOW TO USE CODE
 
 ## Setup:
 
 ### Wiring
 
-This setup connects the RPi4 to the Cube's `TELEM2` port, which is generally recommended for offboard control.
+This setup connects the RPi4 to the flight controller's `TELEM2` port, which is generally recommended for offboard 
+control.
 
-Connect the Cube's `TELEM2` `TX`/`RX`/`GND` pins to the complementary `RXD`/`TXD`/`Ground` pins on the RPi4 GPIO board:
+Connect the flight controller's `TELEM2` `TX`/`RX`/`GND` pins to the complementary `RXD`/`TXD`/`Ground` pins on the RPi4 
+GPIO board:
 
 | PX4 TELEM2 Pin | RPi4 GPIO Pin           |
 | -------------- | ---------------------- |
@@ -55,7 +63,9 @@ Now, we need to enable UART communication on the RPi4's GPIO pins.
 
 Open the firmware boot configuration file:
 
-`$ sudo nano /boot/firmware/config.txt`
+```
+$ sudo nano /boot/firmware/config.txt
+```
 
 Append the following text to the end of the file (after the last line):
 
@@ -68,7 +78,9 @@ Then, save the file and restart the RPi.
 
 You can check that the serial port is available by issuing this command: 
 
-`$ ls /dev/ttyserila0`
+```
+$ ls /dev/ttyserila0
+```
 
 The result of the command should include the RX/TX connection `/dev/ttyAMA0`
 
@@ -94,12 +106,138 @@ Run MAVProxy, setting the port to connect to `/dev/ttyserial0` and the baud rate
 $ sudo mavproxy.py --master=/dev/serial0 --baudrate 57600
 ```
 
-MAVProxy on the RPi should now connect to the Cube via its RX/TX pins. You should be able to see this in the 
+MAVProxy on the RPi should now connect to the flight controller via its RX/TX pins. You should be able to see this in the 
 RPi terminal.
 
-### TODO: DO I NEED PX4 INSTALL???
+### TODO: DO I NEED PX4 INSTALL??? (might need to run ubuntu.sh due to pymavlink and numpy req)
 
 ### Install ROS Noetic
 
 [ROS](http://www.ros.org/) is a general purpose robotics library that can be used with PX4 for drone application 
 development.
+
+These instructions are a simplified version of the 
+[official installation guide](https://wiki.ros.org/noetic/Installation/Ubuntu).
+
+Ubuntu should allow "restricted," "universe," and "multiverse" repositories by default. In the case that it is not, 
+follow the [Ubuntu guide](https://help.ubuntu.com/community/Repositories/Ubuntu). 
+
+Set up your computer to accept software from packages.ros.org: 
+
+```
+$ sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+```
+
+Set up your keys: 
+
+```
+$ sudo apt install curl # if you haven't already installed curl
+$ curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
+```
+
+Make sure your Debian package index is up-to-date:
+
+```
+$ sudo apt update
+```
+
+Install ROS-Base (Bare Bones):
+
+### TODO: DOUBLE CHECK ROS-BASE IS OK
+
+```
+$ sudo apt install ros-noetic-ros-base
+```
+
+You must source this script in every bash terminal you use ROS in.
+
+```
+$ source /opt/ros/noetic/setup.bash
+```
+
+It can be convenient to automatically source this script every time a new shell is launched. These commands will do that 
+for you:
+
+```
+$ echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
+$ source ~/.bashrc
+```
+
+### TODO: DO I NEED ROSDEP???
+
+### Install MAVROS
+
+[MAVROS](https://wiki.ros.org/mavros) is a ROS 1 package that enables MAVLink extendable communication between computers 
+running ROS 1 for any MAVLink enabled autopilot, ground station, or peripheral. MAVROS is the "official" supported 
+bridge between ROS 1 and the MAVLink protocol.
+
+Use `apt-get` for installation:
+
+```
+$ sudo apt-get install ros-noetic-mavros ros-noetic-mavros-extras ros-noetic-mavros-msgs
+```
+
+Then install [GeographicLib](https://geographiclib.sourceforge.io/) datasets by running the 
+`install_geographiclib_datasets.sh` script:
+
+```
+$ wget https://raw.githubusercontent.com/mavlink/mavros/master/mavros/scripts/install_geographiclib_datasets.sh
+$ sudo bash ./install_geographiclib_datasets.sh
+```
+
+### Test MAVROS 
+
+### TODO: CHECK
+
+You can test MAVROS is working correctly by issuing the following command:
+
+```
+$ rosun roslaunch mavros px4.launch fcu_url:=/dev/serial0:57600
+```
+
+This will launch the mavros node and connect to your flight controller. **CTRL+C** to exit.
+
+### Install MAVROSPY
+
+### TODO: DOUBLE CHECK THIS WORKS
+
+### TODO: Work on CMakeLists.txt
+
+Create a [catkin workspace](https://wiki.ros.org/catkin/workspaces): 
+
+```
+$ mkdir -p ~/catkin_ws/src
+```
+
+Clone `mavrospy` in your catkin workspace and build with `catkin_make`: 
+
+```
+$ cd ~/catkin_ws/src
+$ git clone https://github.com/bandofpv/mavrospy.git
+$ cd ..
+$ catkin_make
+```
+
+Similar with ROS, you must source this script in every bash terminal you use MAVROSPY in.
+
+```
+$ source ~/catkin_ws/devel/setup.bash
+```
+
+It can be convenient to automatically source this script every time a new shell is launched. These commands will do that 
+for you:
+
+```
+$ echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc
+$ source ~/.bashrc
+```
+
+### TODO....
+
+### Test MAVROSPY
+
+You can test MAVROSPY is working correctly by issuing the following command: 
+
+```
+$ rosrun .......
+```

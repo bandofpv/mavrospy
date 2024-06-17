@@ -29,7 +29,7 @@ if __name__ == "__main__":
     # Setpoint publishing MUST be faster than 2Hz
     rate = rospy.Rate(20)
 
-    # Wait for Flight Controller connection
+    # Wait for flight controller connection
     while not rospy.is_shutdown() and not current_state.connected:
         rate.sleep()
 
