@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="2">
+
+  <name>mavrospy</name>
+  <version>0.0.1</version>
+
+  <description>ROS node to interact with MAVROS for basic UAV control</description>
+
+  <maintainer email="andrewrbernas@gmail.com">Andrew Bernas</maintainer>
+
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>tf</depend>
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+
+  <build_export_depend>mavros_msgs</build_export_depend>
+
+</package>
