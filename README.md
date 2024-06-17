@@ -76,7 +76,7 @@ enable_uart=1
 dtoverlay=disable-bt
 ```
 
-Then save the file and exit. 
+Save and exit the file. 
 
 ### TODO: Check order... can i add group and append in same session then reboot?
 
@@ -234,8 +234,6 @@ $ echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc
 $ source ~/.bashrc
 ```
 
-### TODO....
-
 ### Test MAVROSPY
 
 ### sudo apt install python-is-python3... OR just change shebang /usr/bin/env python3
@@ -246,4 +244,125 @@ You can test MAVROSPY is working correctly by issuing the following command:
 $ roslaunch mavrospy control_test.launch fcu_url:=/dev/serial0:57600
 ```
 
-### TODO: push a exec version
+### TODO: write what to expect... note will make breaks after adding mode check
+
+### TODO Check the following...
+
+### Start ROS Nodes at Boot
+
+In order to start the mavros node and mavrospy node at boot, we need to create a couple of shell scrips and services. 
+
+Create a separate file that sets your `ROS_MASTER_URI` that we can source when launching ROS Core or any ROS launch:
+
+```
+$ sudo mkdir /etc/ros
+$ sudo nano /etc/ros/env.sh
+```
+
+Put the following lines into the file: 
+
+```
+#!/bin/sh
+export ROS_MASTER_URI=http://localhost:11311
+```
+
+Save and exit the file. 
+
+Create a system service to source all the appropriate environment variables and run ROS core: 
+
+```
+$ sudo nano /etc/systemd/system/roscore.service
+```
+
+Put the following lines into the file:
+
+```
+[Unit]
+Description=ROScore service
+After=network-online.target
+
+[Service]
+Type=forking
+User=%u
+ExecStart=/bin/sh -c ". /opt/ros/noetic/setup.sh; . /etc/ros/env.sh; roscore & while ! echo exit | nc localhost 11311 > /dev/null; do sleep 1; done"
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Save and exit the file.
+
+Create a system service to source all the mavrospy environment variables and run ROS launch: 
+
+```
+$ sudo nano /usr/sbin/mavrospy_auto_launch
+```
+
+Put the following lines into the file:
+
+```
+#!/bin/bash
+source ~/catkin_ws/devel/setup.bash
+
+source /etc/ros/env.sh
+
+export ROS_HOME=~/.ros
+
+roslaunch mavrospy control_test.launch --wait
+
+exit 125
+```
+
+Save and exit the file.
+
+**Note:** : you can modify the launch file to whatever .launch file of your choosing. Example launch files can be found 
+in the [launch](https://github.com/bandofpv/mavrospy/tree/main/launch) directory. 
+
+Make the file executable:
+
+```
+$ sudo chmod +x /usr/sbin/mavrospy_auto_launch
+```
+
+Create a system process to call the shell script above:
+
+```
+sudo nano /etc/systemd/system/ros_package.service
+```
+
+Put the following lines into the file:
+
+```
+[Unit]
+Requires=roscore.service
+After=network-online.target roscore.service
+
+[Service]
+Type=simple
+User=%u
+ExecStart=/usr/sbin/mavrospy_auto_launch
+
+[Install]
+WantedBy=multi-user.target
+```
+
+To have the services called on start up we need to make the system is aware of the new service files and then enable it.
+
+```
+$ sudo systemctl daemon-reload
+$ sudo systemctl enable roscore.service
+$ sudo systemctl enable ros_package.service
+```
+
+Restart the RPi. 
+
+You can verify the services are operational by issuing the following commands:
+
+```
+$ sudo systemctl status roscore.service
+$ sudo systemctl status ros_package.service
+```
+
+You should see `Active: active (running)` somewhere in the status report. **CTRL+C** to exit.
+
+### now what...

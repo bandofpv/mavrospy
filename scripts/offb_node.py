@@ -13,7 +13,7 @@ def state_cb(msg):
 
 
 if __name__ == "__main__":
-    rospy.init_node("offb_node_py")
+    rospy.init_node("mavrospy")
 
     state_sub = rospy.Subscriber("mavros/state", State, callback = state_cb)
 
