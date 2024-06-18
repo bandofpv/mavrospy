@@ -1,10 +1,10 @@
 import tf
 import math
 import rospy
-from geometry_msgs.msg import Pose, PoseStamped, Twist, Quaternion
-from mavros_msgs.msg import State, ExtendedState
-from mavros_msgs.srv import CommandBool, CommandBoolRequest, SetMode, SetModeRequest
 from pymavlink import mavutil
+from mavros_msgs.msg import State, ExtendedState
+from geometry_msgs.msg import Pose, PoseStamped, Twist, Quaternion
+from mavros_msgs.srv import CommandBool, CommandBoolRequest, SetMode, SetModeRequest
 
 
 class MavController:
@@ -68,7 +68,7 @@ class MavController:
 
             if self.current_state.armed == arm_status:
                 rospy.logerr(f"{info.capitalize()}ed Throttle")
-                break
+                return True
 
             self.pause()
 
@@ -91,7 +91,7 @@ class MavController:
         pose.position.y = y
         pose.position.z = z
 
-        # TODO: why +pi_2??
+        # TODO: why +pi_2?? test without might be bugging my takeoff
         quaternion = tf.transformations.quaternion_from_euler(roll, pitch, yaw + self.pi_2)
 
         pose.orientation.x = quaternion[0]
@@ -105,6 +105,24 @@ class MavController:
                 self.pause()
         else:
             self.goto(pose)
+            self.pause()
+
+    def set_vel(self, vx, vy, vz, avx, avy, avz, timeout):
+        """
+        Send command velocities. Must be in OFFBOARD mode. Assumes angular velocities are zero by default.
+        """
+        cmd_vel = Twist()
+
+        cmd_vel.linear.x = vx
+        cmd_vel.linear.y = vy
+        cmd_vel.linear.z = vz
+
+        cmd_vel.angular.x = avx
+        cmd_vel.angular.y = avy
+        cmd_vel.angular.z = avz
+
+        for i in range(timeout * self.freq):
+            self.cmd_vel_pub.publish(cmd_vel)
             self.pause()
 
     def takeoff(self, height, timeout):
@@ -128,16 +146,23 @@ class MavController:
         """
         Set mode to AUTO.LAND for immediate descent and disarm when on ground.
         """
+        rospy.loginfo("Changing Mode: AUTO.LAND")
+
         while True:
-            self.mode_service(custom_mode="AUTO.LAND")
+            try:
+                resp = self.mode_service(custom_mode="AUTO.LAND")
+                if not resp.mode_sent:
+                    rospy.logerr("Failed to Change Mode: AUTO.LAND")
+            except rospy.ServiceException as e:
+                rospy.logerr(e)
+
             if self.current_extended_state.landed_state == mavutil.mavlink.MAV_LANDED_STATE_ON_GROUND:
                 break
             self.pause()
 
-        rospy.loginfo("Changed Mode: Land")
+        rospy.loginfo("Landed")
 
         self.arm(False)
         rospy.loginfo("Disarmed")
 
-# TODO: relative ned
-# TODO: velocity command
+# TODO: relative ned AND vel (after sitl with current setup)
