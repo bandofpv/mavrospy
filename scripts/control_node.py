@@ -6,7 +6,7 @@ from mavros_msgs.msg import State, ExtendedState
 from mavros_msgs.srv import CommandBool, CommandBoolRequest, SetMode, SetModeRequest
 from pymavlink import mavutil
 
-# from mavros_msgs.srv import CommandTOL
+from mavros_msgs.srv import CommandTOL
 
 
 class MavController:
@@ -27,16 +27,16 @@ class MavController:
         self.cmd_vel_pub = rospy.Publisher("/mavros/setpoint_velocity/cmd_vel_unstamped", Twist, queue_size=1)
 
         # TODO: fix try and expect waits for services
-        # try:
-        #     rospy.wait_for_service("/mavros/cmd/set_mode")
-        #     # rospy.wait_for_service("/mavros/cmd/takeoff")
-        #     rospy.wait_for_service("/mavros/cmd/arming")
-        # except rospy.ROSException:
-        #     rospy.logerr("Failed to connect to services")
+        try:
+            rospy.wait_for_service("/mavros/cmd/set_mode")
+            rospy.wait_for_service("/mavros/cmd/takeoff")
+            rospy.wait_for_service("/mavros/cmd/arming")
+        except rospy.ROSException:
+            rospy.logerr("Failed to connect to services")
 
         self.mode_service = rospy.ServiceProxy('/mavros/set_mode', SetMode)
         self.arm_service = rospy.ServiceProxy('/mavros/cmd/arming', CommandBool)
-        # self.takeoff_service = rospy.ServiceProxy('/mavros/cmd/takeoff', CommandTOL)
+        self.takeoff_service = rospy.ServiceProxy('/mavros/cmd/takeoff', CommandTOL)
         # TODO: implement takeoff service to takeoff using current heading
 
         self.current_state = State()
@@ -127,7 +127,11 @@ class MavController:
         self.arm()
 
         # Takeoff
-        self.goto_xyz_rpy(0, 0, height, 0, 0, 0, timeout)
+        for i in range(timeout * self.freq):
+            self.takeoff_service(altitude=height)
+            self.rate.sleep()
+
+        # self.goto_xyz_rpy(0, 0, height, 0, 0, 0, timeout)
 
         # self.goto_xyz_rpy(self.pose.position.x, self.pose.position.y, height, 0, 0, 0)
 
