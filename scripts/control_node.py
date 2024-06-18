@@ -6,8 +6,6 @@ from mavros_msgs.msg import State, ExtendedState
 from mavros_msgs.srv import CommandBool, CommandBoolRequest, SetMode, SetModeRequest
 from pymavlink import mavutil
 
-from mavros_msgs.srv import CommandTOL
-
 
 class MavController:
     """
@@ -18,40 +16,25 @@ class MavController:
         rospy.init_node("mav_control_node")
 
         rospy.Subscriber("mavros/state", State, self.state_callback)
-
         rospy.Subscriber("/mavros/local_position/pose", PoseStamped, self.pose_callback)
-
         rospy.Subscriber("/mavros/extended_state", ExtendedState, self.extended_state_callback)
 
         self.cmd_pos_pub = rospy.Publisher("/mavros/setpoint_position/local", PoseStamped, queue_size=1)
         self.cmd_vel_pub = rospy.Publisher("/mavros/setpoint_velocity/cmd_vel_unstamped", Twist, queue_size=1)
 
-        # TODO: fix try and expect waits for services
-        try:
-            rospy.wait_for_service("/mavros/cmd/set_mode")
-            rospy.wait_for_service("/mavros/cmd/takeoff")
-            rospy.wait_for_service("/mavros/cmd/arming")
-        except rospy.ROSException:
-            rospy.logerr("Failed to connect to services")
-
         self.mode_service = rospy.ServiceProxy('/mavros/set_mode', SetMode)
         self.arm_service = rospy.ServiceProxy('/mavros/cmd/arming', CommandBool)
-        self.takeoff_service = rospy.ServiceProxy('/mavros/cmd/takeoff', CommandTOL)
-        # TODO: implement takeoff service to takeoff using current heading
 
-        self.current_state = State()
-        self.current_extended_state = ExtendedState()
         self.pose = Pose()
+        self.current_state = State()
         self.timestamp = rospy.Time()
+        self.current_extended_state = ExtendedState()
+
         self.pi_2 = math.pi / 2.0
         self.freq = send_rate
         self.rate = rospy.Rate(send_rate)
 
-        # Wait for Flight Controller connection
-        while not rospy.is_shutdown() and not self.current_state.connected:
-            self.rate.sleep()
-
-        rospy.loginfo("MAVROS Controller Initiated")
+        rospy.loginfo("MavController Initiated")
 
     def state_callback(self, data):
         self.current_state = data
@@ -62,6 +45,34 @@ class MavController:
     def pose_callback(self, data):
         self.timestamp = data.header.stamp
         self.pose = data.pose
+
+    def pause(self):
+        try:
+            self.rate.sleep()
+        except rospy.ROSException as e:
+            rospy.logerr(e)
+
+    def arm(self, arm_status, timeout=5):
+        """
+        Arm the throttle
+        """
+        info = "arm" if arm_status else "disarm"
+
+        for i in range(timeout * self.freq):
+            try:
+                resp = self.arm_service(arm_status)
+                if not resp.success:
+                    rospy.logerr(f"Failed to send {info} command")
+            except rospy.ServiceException as e:
+                rospy.logerr(e)
+
+            if self.current_state.armed == arm_status:
+                rospy.logerr(f"{info.capitalize()}ed Throttle")
+                break
+
+            self.pause()
+
+        rospy.logerr(f"Failed to {info} throttle in {timeout} seconds")
 
     def goto(self, pose):
         """
@@ -80,62 +91,38 @@ class MavController:
         pose.position.y = y
         pose.position.z = z
 
-        quaternion = tf.transformations.quaternion_from_euler(roll, pitch, yaw + self.pi_2)  # why +pi_2??
+        # TODO: why +pi_2??
+        quaternion = tf.transformations.quaternion_from_euler(roll, pitch, yaw + self.pi_2)
 
         pose.orientation.x = quaternion[0]
         pose.orientation.y = quaternion[1]
         pose.orientation.z = quaternion[2]
         pose.orientation.w = quaternion[3]
 
-        # try
-        # pose.orientation = Quaternion(*quaternion)
-
         if loop:
             for i in range(timeout * self.freq):
                 self.goto(pose)
-                self.rate.sleep()
+                self.pause()
         else:
             self.goto(pose)
-            self.rate.sleep()
-
-    def arm(self, timeout=5):
-        """
-        Arm the throttle
-        """
-        for i in range(timeout * self.freq):
-            self.arm_service(True)
-            if self.current_state.armed:
-                rospy.loginfo("Armed")
-                return True
-            self.rate.sleep()
-
-        rospy.logerr("Failed To Arm")
-
-    def disarm(self):
-        """
-        Disarm the throttle
-        """
-        self.arm_service(False)
+            self.pause()
 
     def takeoff(self, height, timeout):
         """
         Arm the throttle and takeoff to a few feet
         """
-        # Set to offboard mode
-        # mode_resp = self.mode_service(custom_mode="OFFBOARD")
-
-        self.arm()
+        self.arm(True)
 
         # Takeoff
-        for i in range(timeout * self.freq):
-            self.takeoff_service(altitude=height)
-            self.rate.sleep()
 
         # self.goto_xyz_rpy(0, 0, height, 0, 0, 0, timeout)
 
-        # self.goto_xyz_rpy(self.pose.position.x, self.pose.position.y, height, 0, 0, 0)
+        explicit_quat = [self.pose.orientation.x, self.pose.orientation.y,
+                         self.pose.orientation.z, self.pose.orientation.w]
+        roll, pitch, yaw = tf.transformations.euler_from_quaternion(explicit_quat)
 
-        # return takeoff_resp
+        rospy.loginfo("Taking Off")
+        self.goto_xyz_rpy(self.pose.position.x, self.pose.position.y, height, roll, pitch, yaw, timeout)
 
     def land(self):
         """
@@ -145,14 +132,12 @@ class MavController:
             self.mode_service(custom_mode="AUTO.LAND")
             if self.current_extended_state.landed_state == mavutil.mavlink.MAV_LANDED_STATE_ON_GROUND:
                 break
-            self.rate.sleep()
+            self.pause()
 
         rospy.loginfo("Changed Mode: Land")
 
-        self.disarm()
+        self.arm(False)
         rospy.loginfo("Disarmed")
 
-        # return resp
-
-# TODO: add try and except to avoid errors
-
+# TODO: relative ned
+# TODO: velocity command

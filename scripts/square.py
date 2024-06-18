@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+import tf
 import rospy
 from control_node import MavController
 
@@ -12,7 +13,6 @@ def simple_demo():
     rate = 20
 
     c = MavController(rate)
-    # rospy.sleep(1)
     alt = 3.0
 
     while not rospy.is_shutdown():
@@ -20,7 +20,9 @@ def simple_demo():
             rospy.loginfo("OFFBOARD enabled")
             break
 
-        c.goto_xyz_rpy(0.0, 0.0, 0.0, 0, 0, 0, 0, False)
+        explicit_quat = [c.pose.orientation.x, c.pose.orientation.y, c.pose.orientation.z, c.pose.orientation.w]
+        roll, pitch, yaw = tf.transformations.euler_from_quaternion(explicit_quat)
+        c.goto_xyz_rpy(c.pose.position.x, c.pose.position.y, c.pose.position.z, roll, pitch, yaw, 0, False)
 
     rospy.loginfo(f"Takeoff: {alt}m")
     c.takeoff(alt, 8)
@@ -37,8 +39,6 @@ def simple_demo():
     rospy.loginfo("Waypoint 4: position control")
     c.goto_xyz_rpy(0.0, 10.0, alt, 0, 0, 2 * c.pi_2, 2)
     c.goto_xyz_rpy(0.0, 0.0, alt, 0, 0, 2 * c.pi_2, 6)
-    # c.goto_xyz_rpy(0.0, 0.0, alt, 0, 0, 3 * c.pi_2, 1)
-    # c.goto_xyz_rpy(0.0, 0.0, alt, 0, 0, 4 * c.pi_2, 2)
 
     rospy.loginfo("Landing")
     c.land()

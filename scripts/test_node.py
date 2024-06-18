@@ -12,7 +12,6 @@ def state_cb(msg):
     global current_state
     current_state = msg
 
-
 if __name__ == "__main__":
     rospy.init_node("test_node_py")
 
