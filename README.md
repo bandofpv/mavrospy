@@ -1,7 +1,8 @@
 # mavrospy
 ROS node to interact with [MAVROS](https://wiki.ros.org/mavros) for basic UAV control.
 
-This current repo is supported on a PX4 flight controller with a RPi4 companion computer running Ubuntu 20.04 MATE with ROS Noetic. 
+This current repo is supported on a PX4 flight controller with a RPi4 companion computer running Ubuntu 20.04 MATE with 
+ROS Noetic. 
 
 ## Usage:
 
@@ -14,6 +15,9 @@ This repository is supported on ROS Noetic. If you haven't already, please insta
 [Raspberry Pi Imager](https://www.raspberrypi.com/software/). 
 
 Select the `Log in automatically` option upon first boot. 
+
+**Note:** If prompted to upgrade to a newer version of Ubuntu, selected `Don't Upgrade`. ROS Noetic is primarily 
+targeted at the Ubuntu 20.04 (Focal) release.
 
 ### Wiring
 
@@ -78,8 +82,6 @@ dtoverlay=disable-bt
 
 Save and exit the file. 
 
-### TODO: Check order... can i add group and append in same session then reboot?
-
 Run this command to add your user to the `dialout` group:
 
 ```
@@ -91,7 +93,7 @@ Restart the RPi.
 You can check that the serial port is available by issuing this command: 
 
 ```
-$ ls /dev/serila0
+$ ls /dev/serial0
 ```
 
 The result of the command should include the RX/TX connection `/dev/serial0`
@@ -177,11 +179,10 @@ bridge between ROS 1 and the MAVLink protocol.
 These instructions are a simplified version of the 
 [official installation guide](https://github.com/mavlink/mavros/blob/master/mavros/README.md#installation)
 
-### TODO: Use `apt` instead...  
-Use `apt-get` for installation:
+Enter the following command to install MAVROS:
 
 ```
-$ sudo apt-get install ros-noetic-mavros ros-noetic-mavros-extras ros-noetic-mavros-msgs
+$ sudo apt install ros-noetic-mavros ros-noetic-mavros-extras ros-noetic-mavros-msgs
 ```
 
 Then install [GeographicLib](https://geographiclib.sourceforge.io/) datasets by running the 
@@ -246,11 +247,9 @@ $ roslaunch mavrospy control_test.launch fcu_url:=/dev/serial0:57600
 
 ### TODO: write what to expect... note will make breaks after adding mode check
 
-### TODO Check the following...
-
 ### Start ROS Nodes at Boot
 
-In order to start the mavros node and mavrospy node at boot, we need to create a couple of shell scrips and services. 
+In order to start the mavros node and mavrospy node at boot, we need to create a couple of shell scripts and services. 
 
 Create a separate file that sets your `ROS_MASTER_URI` that we can source when launching ROS Core or any ROS launch:
 
@@ -274,7 +273,7 @@ Create a system service to source all the appropriate environment variables and 
 $ sudo nano /etc/systemd/system/roscore.service
 ```
 
-Put the following lines into the file, changing `your_robots_user` to your username:
+Put the following lines into the file, changing `your_username` to your RPi's username:
 
 ```
 [Unit]
@@ -283,7 +282,7 @@ After=network-online.target
 
 [Service]
 Type=forking
-User=your_robots_user
+User=your_username
 ExecStart=/bin/sh -c ". /opt/ros/noetic/setup.sh; . /etc/ros/env.sh; roscore & while ! echo exit | nc localhost 11311 > /dev/null; do sleep 1; done"
 
 [Install]
@@ -298,15 +297,15 @@ Create a system service to source all the mavrospy environment variables and run
 $ sudo nano /usr/sbin/mavrospy_auto_launch
 ```
 
-Put the following lines into the file, changing both occurrences of `your_robots_user` to your username:
+Put the following lines into the file, changing both occurrences of `your_username` to your RPi's username:
 
 ```
 #!/bin/bash
-source $(echo ~your_robots_user)/catkin_ws/devel/setup.bash
+source $(echo ~your_username)/catkin_ws/devel/setup.bash
 
 source /etc/ros/env.sh
 
-export ROS_HOME=$(echo ~your_robots_user)/.ros
+export ROS_HOME=$(echo ~your_username)/.ros
 
 roslaunch mavrospy control_test.launch fcu_url:=/dev/serial0:57600 --wait
 
@@ -330,7 +329,7 @@ Create a system process to call the shell script above:
 $ sudo nano /etc/systemd/system/ros_package.service
 ```
 
-Put the following lines into the file, changing `your_robots_user` to your username:
+Put the following lines into the file, changing `your_username` to your RPi's username:
 
 ```
 [Unit]
@@ -339,19 +338,18 @@ After=network-online.target roscore.service
 
 [Service]
 Type=simple
-User=your_robots_user
+User=your_username
 ExecStart=/usr/sbin/mavrospy_auto_launch
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-To have the services called on start up we need to make the system is aware of the new service files and then enable it.
+To have the services called on start up we need to make the system aware of the new service files and then enable them.
 
 ```
 $ sudo systemctl daemon-reload
-$ sudo systemctl enable roscore.service
-$ sudo systemctl enable ros_package.service
+$ sudo systemctl enable roscore.service ros_package.service
 ```
 
 Restart the RPi. 
@@ -359,10 +357,9 @@ Restart the RPi.
 You can verify the services are operational by issuing the following commands:
 
 ```
-$ sudo systemctl status roscore.service
-$ sudo systemctl status ros_package.service
+$ sudo systemctl status roscore.service ros_package.service
 ```
 
-You should see `Active: active (running)` somewhere in the status report. **CTRL+C** to exit.
+You should see `Active: active (running)` somewhere in the status report for both services. **CTRL+C** to exit.
 
-### now what... 
+You're all set! When you boot up our UAV, switch to `ONBOARD` mode and watch it fly!
