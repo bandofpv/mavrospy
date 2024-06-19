@@ -16,10 +16,11 @@ class MavController:
         rospy.init_node("mav_control_node")
 
         rospy.Subscriber("mavros/state", State, self.state_callback)
-        rospy.Subscriber("/mavros/local_position/pose", PoseStamped, self.pose_callback)
+        # rospy.Subscriber("/mavros/local_position/pose", PoseStamped, self.pose_callback)
         rospy.Subscriber("/mavros/extended_state", ExtendedState, self.extended_state_callback)
 
-        # rospy.Subscriber("/mavros/vision_pose/pose", PoseStamped, self.pose_callback)
+        rospy.Subscriber("/mavros/vision_pose/pose", PoseStamped, self.pose_callback)
+        self.local_pos_pub = rospy.Publisher("/mavros/local_position/pose", PoseStamped, queue_size=1)
 
         self.cmd_pos_pub = rospy.Publisher("/mavros/setpoint_position/local", PoseStamped, queue_size=1)
         self.cmd_vel_pub = rospy.Publisher("/mavros/setpoint_velocity/cmd_vel_unstamped", Twist, queue_size=1)
@@ -47,6 +48,14 @@ class MavController:
     def pose_callback(self, data):
         self.timestamp = data.header.stamp
         self.pose = data.pose
+
+    def mocap(self):
+        pose_stamped = PoseStamped()
+        pose_stamped.header.stamp = self.timestamp
+        pose_stamped.pose = self.pose
+
+        self.local_pos_pub.publish(pose_stamped)
+        self.pause()
 
     def pause(self):
         try:

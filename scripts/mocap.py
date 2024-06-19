@@ -18,7 +18,7 @@ def simple_demo():
         # print(c.pose)
 
     while not rospy.is_shutdown():
-        pass
+        c.mocap()
 
 if __name__ == "__main__":
     simple_demo()
