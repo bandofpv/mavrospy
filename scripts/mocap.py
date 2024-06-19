@@ -14,9 +14,11 @@ def simple_demo():
 
     c = MavController(rate)
 
-    while True:
-        print(c.pose)
+    # while True:
+        # print(c.pose)
 
+    while not rospy.is_shutdown():
+        pass
 
 if __name__ == "__main__":
     simple_demo()

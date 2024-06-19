@@ -16,10 +16,10 @@ class MavController:
         rospy.init_node("mav_control_node")
 
         rospy.Subscriber("mavros/state", State, self.state_callback)
-        # rospy.Subscriber("/mavros/local_position/pose", PoseStamped, self.pose_callback)
+        rospy.Subscriber("/mavros/local_position/pose", PoseStamped, self.pose_callback)
         rospy.Subscriber("/mavros/extended_state", ExtendedState, self.extended_state_callback)
 
-        rospy.Subscriber("/mavros/vision_pose/pose", PoseStamped, self.pose_callback)
+        # rospy.Subscriber("/mavros/vision_pose/pose", PoseStamped, self.pose_callback)
 
         self.cmd_pos_pub = rospy.Publisher("/mavros/setpoint_position/local", PoseStamped, queue_size=1)
         self.cmd_vel_pub = rospy.Publisher("/mavros/setpoint_velocity/cmd_vel_unstamped", Twist, queue_size=1)
