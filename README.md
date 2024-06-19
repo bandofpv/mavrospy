@@ -62,7 +62,7 @@ Assuming you have installed the latest PX4
 ```
    MAV_1_CONFIG = TELEM2
    UXRCE_DDS_CFG = 0 
-   SER_TEL2_BAUD = 57600
+   SER_TEL2_BAUD = 921600
 ```
 
 ### Enable UART Communication
@@ -117,7 +117,7 @@ $ sudo apt remove modemmanager
 Run MAVProxy, setting the port to connect to `/dev/ttyserial0` and the baud rate to match the flight controller (57600):
 
 ```
-$ sudo mavproxy.py --master=/dev/serial0 --baudrate 57600
+$ sudo mavproxy.py --master=/dev/serial0 --baudrate 921600
 ```
 
 MAVProxy on the RPi should now connect to the flight controller via its RX/TX pins. You should be able to see this in the 
@@ -198,7 +198,7 @@ $ sudo bash ./install_geographiclib_datasets.sh
 You can test MAVROS is working correctly by issuing the following command:
 
 ```
-$ roslaunch mavros px4.launch fcu_url:=/dev/serial0:57600
+$ roslaunch mavros px4.launch fcu_url:=/dev/serial0:921600
 ```
 
 This will launch the mavros node and connect to your flight controller. **CTRL+C** to exit.
@@ -242,7 +242,7 @@ $ source ~/.bashrc
 You can test MAVROSPY is working correctly by issuing the following command: 
 
 ```
-$ roslaunch mavrospy control_test.launch fcu_url:=/dev/serial0:57600
+$ roslaunch mavrospy control_test.launch fcu_url:=/dev/serial0:921600
 ```
 
 ### TODO: write what to expect... note will make breaks after adding mode check
@@ -307,7 +307,7 @@ source /etc/ros/env.sh
 
 export ROS_HOME=$(echo ~your_username)/.ros
 
-roslaunch mavrospy control_test.launch fcu_url:=/dev/serial0:57600 --wait
+roslaunch mavrospy control_test.launch fcu_url:=/dev/serial0:921600 --wait
 
 exit 125
 ```

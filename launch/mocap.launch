@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+	<arg name="fcu_url" />
+
+	<!-- Include the MAVROS px4 node -->
+	<include file="$(find mavros)/launch/px4.launch">
+		<arg name="fcu_url" value="$(arg fcu_url)" />
+		<remap from"/mavros/vision_pose/pose" to="/qualisys/Bernas_Quad/pose">
+	</include>
+</launch>
