@@ -22,6 +22,8 @@ def simple_demo():
 
         c.goto_xyz_rpy(0, 0, 0, 0, 0, 0, 0, False)
 
+    c.set_home_position()
+
     rospy.loginfo(f"Takeoff: {alt}m")
     c.takeoff(alt, 8)
 
@@ -39,10 +41,10 @@ def simple_demo():
     c.goto_xyz_rpy(0.0, 0.0, alt, 0, 0, 2 * c.pi_2, 3)
 
     rospy.loginfo("Landing")
-    c.land()
+    # c.land()
 
-    # c.goto_xyz_rpy(0, 0, 0, 0, 0, 2 * c.pi_2, 5)
-    # c.arm(False)
+    c.goto_xyz_rpy(0, 0, 0, 0, 0, 2 * c.pi_2, 5)
+    c.arm(False)
 
 if __name__ == "__main__":
     simple_demo()

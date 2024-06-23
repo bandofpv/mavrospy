@@ -11,17 +11,21 @@ from builtins import object
 from pymavlink.dialects.v10 import common as MAV_COMMON
 
 # Global position of the origin
-lat = 38.9853504 * 1e7   # Hopper Hall 389853504
-lon = -76.4857648 * 1e7   # Hopper Hall -764857648
+lat = 38.9853504 * 1e7  # Hopper Hall 389853504
+lon = -76.4857648 * 1e7  # Hopper Hall -764857648
 alt = 36.810 * 1e3  # Hopper Hall 36810
+
 
 class fifo(object):
     """ A simple buffer """
+
     def __init__(self):
         self.buf = []
+
     def write(self, data):
         self.buf += data
         return len(data)
+
     def read(self):
         return self.buf.pop(0)
 
@@ -31,6 +35,7 @@ def send_message(msg, mav):
     Send a mavlink message
     """
     msg.pack(mav)
+
 
 def set_global_origin(mav):
     """
@@ -42,13 +47,11 @@ def set_global_origin(mav):
     longitude = lon
     altitude = alt
 
-    msg = MAV_COMMON.set_gps_global_origin_send(
-            target_system,
-            latitude,
-            longitude,
-            altitude)
-
-    send_message(msg, mav)
+    MAV_COMMON.set_gps_global_origin_send(
+        target_system,
+        latitude,
+        longitude,
+        altitude)
 
 
 def set_home(mav):
@@ -80,37 +83,38 @@ def set_home_position(mav, pub):
     us to use local position information without a GPS
     """
     target_system = mav.srcSystem
-    #target_system = 0  # broadcast to everyone
+    # target_system = 0  # broadcast to everyone
 
     lattitude = lat
     longitude = lon
     altitude = alt
-    
+
     x = 0
     y = 0
     z = 0
-    q = [1, 0, 0, 0]   # w x y z
+    q = [1, 0, 0, 0]  # w x y z
 
     approach_x = 0
     approach_y = 0
     approach_z = 1
 
     msg = MAV_COMMON.MAVLink_set_home_position_message(
-            target_system,
-            lattitude,
-            longitude,
-            altitude,
-            x,
-            y,
-            z,
-            q,
-            approach_x,
-            approach_y,
-            approach_z)
+        target_system,
+        lattitude,
+        longitude,
+        altitude,
+        x,
+        y,
+        z,
+        q,
+        approach_x,
+        approach_y,
+        approach_z)
 
     send_message(msg, mav)
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     try:
         # Set up mavlink instance
         f = fifo()
@@ -120,7 +124,6 @@ if __name__=="__main__":
             rospy.sleep(1)
             set_global_origin(mav)
             # set_home_position(mav, mavlink_pub)
-            set_home(mav)
+            # set_home(mav)
     except rospy.ROSInterruptException:
         pass
-

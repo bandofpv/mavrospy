@@ -4,7 +4,7 @@ import rospy
 from pymavlink import mavutil
 from mavros_msgs.msg import State, ExtendedState
 from geometry_msgs.msg import Pose, PoseStamped, Twist, Quaternion
-from mavros_msgs.srv import CommandBool, CommandBoolRequest, SetMode, SetModeRequest
+from mavros_msgs.srv import CommandBool, CommandBoolRequest, SetMode, SetModeRequest, CommandHome
 
 
 class MavController:
@@ -24,6 +24,7 @@ class MavController:
 
         self.mode_service = rospy.ServiceProxy('/mavros/set_mode', SetMode)
         self.arm_service = rospy.ServiceProxy('/mavros/cmd/arming', CommandBool)
+        self.home_service = rospy.ServiceProxy('/mavros/cmd/set_home', CommandHome)
 
         self.pose = Pose()
         self.current_state = State()
@@ -33,6 +34,10 @@ class MavController:
         self.pi_2 = math.pi / 2.0
         self.freq = send_rate
         self.rate = rospy.Rate(send_rate)
+
+        self.lat = 389853504  # Hopper Hall 389853504
+        self.lon = -764857648  # Hopper Hall -764857648
+        self.alt = 36810  # Hopper Hall 36810
 
         rospy.loginfo("MavController Initiated")
 
@@ -52,27 +57,38 @@ class MavController:
         except rospy.ROSException as e:
             rospy.logerr(e)
 
+    def set_home_position(self):
+        try:
+            resp = self.home_service(latitude=self.lat, longitude=self.lon, altitude=self.alt)
+            if not resp.success:
+                rospy.logerr("Failed to set home position")
+        except rospy.ServiceException as e:
+            rospy.logerr(e)
+
     def arm(self, arm_status, timeout=5):
         """
         Arm the throttle
         """
         info = "arm" if arm_status else "disarm"
 
-        for i in range(timeout * self.freq):
-            try:
-                resp = self.arm_service(arm_status)
-                if not resp.success:
-                    rospy.logerr(f"Failed to send {info} command")
-            except rospy.ServiceException as e:
-                rospy.logerr(e)
+        try:
+            for i in range(timeout * self.freq):
+                try:
+                    resp = self.arm_service(arm_status)
+                    if not resp.success:
+                        rospy.logerr(f"Failed to send {info} command")
+                except rospy.ServiceException as e:
+                    rospy.logerr(e)
 
-            if self.current_state.armed == arm_status:
-                rospy.loginfo(f"{info.capitalize()}ed Throttle")
-                return True
+                if self.current_state.armed == arm_status:
+                    rospy.loginfo(f"{info.capitalize()}ed Throttle")
+                    return True
 
-            self.pause()
+                self.pause()
 
-        rospy.logerr(f"Failed to {info} throttle in {timeout} seconds")
+            rospy.logerr(f"Failed to {info} throttle in {timeout} seconds")
+        except rospy.ROSException as e:
+            rospy.logerr(e)
 
     def goto(self, pose):
         """
@@ -83,7 +99,10 @@ class MavController:
         pose_stamped.header.stamp = self.timestamp
         pose_stamped.pose = pose
 
-        self.cmd_pos_pub.publish(pose_stamped)
+        try:
+            self.cmd_pos_pub.publish(pose_stamped)
+        except rospy.ROSException as e:
+            rospy.logerr(e)
 
     def goto_xyz_rpy(self, x, y, z, roll, pitch, yaw, timeout, loop=True):
         pose = Pose()
