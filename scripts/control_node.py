@@ -13,24 +13,30 @@ class MavController:
     """
 
     def __init__(self, send_rate):
+        # initialize our control node
         rospy.init_node("mav_control_node")
 
+        # create subscribers
         rospy.Subscriber("mavros/state", State, self.state_callback)
         rospy.Subscriber("/mavros/local_position/pose", PoseStamped, self.pose_callback)
         rospy.Subscriber("/mavros/extended_state", ExtendedState, self.extended_state_callback)
 
+        # create publishers
         self.cmd_pos_pub = rospy.Publisher("/mavros/setpoint_position/local", PoseStamped, queue_size=1)
         self.cmd_vel_pub = rospy.Publisher("/mavros/setpoint_velocity/cmd_vel_unstamped", Twist, queue_size=1)
 
+        # create services
         self.mode_service = rospy.ServiceProxy('/mavros/set_mode', SetMode)
         self.arm_service = rospy.ServiceProxy('/mavros/cmd/arming', CommandBool)
         self.home_service = rospy.ServiceProxy('/mavros/cmd/set_home', CommandHome)
 
+        # initialize ROS messages
         self.pose = Pose()
         self.current_state = State()
         self.timestamp = rospy.Time()
         self.current_extended_state = ExtendedState()
 
+        # initialize constants
         self.pi_2 = math.pi / 2.0
         self.freq = send_rate
         self.rate = rospy.Rate(send_rate)
@@ -48,16 +54,22 @@ class MavController:
         self.current_extended_state = data
 
     def pose_callback(self, data):
-        self.timestamp = data.header.stamp
+        self.timestamp = data.header.stamp  # timestamp pose message
         self.pose = data.pose
 
     def pause(self):
+        """
+        Pause at given rate
+        """
         try:
             self.rate.sleep()
         except rospy.ROSException as e:
             rospy.logerr(e)
 
     def set_home_position(self):
+        """
+        WIP
+        """
         try:
             resp = self.home_service(latitude=self.lat, longitude=self.lon, altitude=self.alt)
             if not resp.success:
@@ -67,20 +79,20 @@ class MavController:
 
     def arm(self, arm_status, timeout=5):
         """
-        Arm the throttle
+        Arm the throttle.
         """
         info = "arm" if arm_status else "disarm"
 
         try:
-            for i in range(timeout * self.freq):
+            for i in range(timeout * self.freq):  # loop for given timeout
                 try:
-                    resp = self.arm_service(arm_status)
+                    resp = self.arm_service(arm_status)  # set arm status
                     if not resp.success:
                         rospy.logerr(f"Failed to send {info} command")
                 except rospy.ServiceException as e:
                     rospy.logerr(e)
 
-                if self.current_state.armed == arm_status:
+                if self.current_state.armed == arm_status:  # break when arm status is set
                     rospy.loginfo(f"{info.capitalize()}ed Throttle")
                     return True
 
@@ -95,22 +107,31 @@ class MavController:
         Set the given pose as a next set point by sending a SET_POSITION_TARGET_LOCAL_NED message. The copter must be in
         OFFBOARD mode for this to work.
         """
+        if self.current_state.mode != "OFFBOARD":  # require OFFBOARD mode
+            return False
+
+        # initialize ROS PoseStamped message
         pose_stamped = PoseStamped()
         pose_stamped.header.stamp = self.timestamp
         pose_stamped.pose = pose
 
         try:
-            self.cmd_pos_pub.publish(pose_stamped)
+            self.cmd_pos_pub.publish(pose_stamped)  # publish PoseStamed message
         except rospy.ROSException as e:
             rospy.logerr(e)
 
     def goto_xyz_rpy(self, x, y, z, roll, pitch, yaw, timeout, loop=True):
+        """
+        Sets the given pose as a next set point for given timeout (seconds).
+        """
+        # initialize Pose message
         pose = Pose()
         pose.position.x = x
         pose.position.y = y
         pose.position.z = z
 
         # TODO: why +pi_2?? test without might be bugging my takeoff
+        # convert euler angles (roll, pitch, yaw) to quaternion (x, y, z, w)
         quaternion = tf.transformations.quaternion_from_euler(roll, pitch, yaw + self.pi_2)
 
         pose.orientation.x = quaternion[0]
@@ -119,16 +140,18 @@ class MavController:
         pose.orientation.w = quaternion[3]
 
         if loop:
-            for i in range(timeout * self.freq):
-                self.goto(pose)
+            for i in range(timeout * self.freq):  # loop for given timeout
+                self.goto(pose)  # go to given pose
                 self.pause()
         else:
-            self.goto(pose)
+            self.goto(pose)  # go to given pose
             self.pause()
 
     def set_vel(self, vx, vy, vz, avx, avy, avz, timeout):
         """
         Send command velocities. Must be in OFFBOARD mode. Assumes angular velocities are zero by default.
+
+        WIP
         """
         cmd_vel = Twist()
 
@@ -147,8 +170,10 @@ class MavController:
     def takeoff(self, height, timeout):
         """
         Arm the throttle and takeoff to a few feet
+
+        WIP
         """
-        self.arm(True)
+        self.arm(True)  # arm throttle
 
         # Takeoff
 
@@ -169,19 +194,20 @@ class MavController:
 
         while True:
             try:
-                resp = self.mode_service(custom_mode="AUTO.LAND")
+                resp = self.mode_service(custom_mode="AUTO.LAND")  # set mode to AUTO.LAND
                 if not resp.mode_sent:
                     rospy.logerr("Failed to Change Mode: AUTO.LAND")
             except rospy.ServiceException as e:
                 rospy.logerr(e)
 
+            # break when on the ground
             if self.current_extended_state.landed_state == mavutil.mavlink.MAV_LANDED_STATE_ON_GROUND:
                 break
             self.pause()
 
         rospy.loginfo("Landed")
 
-        self.arm(False)
+        self.arm(False)  # disarm throttle
         rospy.loginfo("Disarmed")
 
 # TODO: relative ned AND vel (after sitl with current setup)

@@ -11,9 +11,9 @@ from builtins import object
 from pymavlink.dialects.v10 import common as MAV_COMMON
 
 # Global position of the origin
-lat = 38.9853504 * 1e7  # Hopper Hall 389853504
-lon = -76.4857648 * 1e7  # Hopper Hall -764857648
-alt = 36.810 * 1e3  # Hopper Hall 36810
+lat = 389853504  # Hopper Hall
+lon = -764857648  # Hopper Hall
+alt = 36810   # Hopper Hall
 
 
 class fifo(object):
@@ -47,7 +47,7 @@ def set_global_origin(mav):
     longitude = lon
     altitude = alt
 
-    MAV_COMMON.set_gps_global_origin_send(
+    mav.set_gps_global_origin_send(
         target_system,
         latitude,
         longitude,
