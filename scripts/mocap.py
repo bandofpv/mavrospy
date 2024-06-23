@@ -13,7 +13,7 @@ def simple_demo():
     rate = 20
 
     c = MavController(rate)
-    alt = 1.0
+    alt = 2.0
 
     while not rospy.is_shutdown():
         if c.current_state.mode == "OFFBOARD":
@@ -25,24 +25,24 @@ def simple_demo():
     rospy.loginfo(f"Takeoff: {alt}m")
     c.takeoff(alt, 8)
 
-    # rospy.loginfo("Waypoint 1: position control")
-    # c.goto_xyz_rpy(0.0, 0.0, alt, 0, 0, -1 * c.pi_2, 2)
-    # c.goto_xyz_rpy(1.0, 0.0, alt, 0, 0, -1 * c.pi_2, 3)
-    # rospy.loginfo("Waypoint 2: position control")
-    # c.goto_xyz_rpy(1.0, 0.0, alt, 0, 0, 0, 2)
-    # c.goto_xyz_rpy(1.0, 1.0, alt, 0, 0, 0, 3)
-    # rospy.loginfo("Waypoint 3: position control")
-    # c.goto_xyz_rpy(1.0, 1.0, alt, 0, 0, c.pi_2, 2)
-    # c.goto_xyz_rpy(0.0, 1.0, alt, 0, 0, c.pi_2, 3)
-    # rospy.loginfo("Waypoint 4: position control")
-    # c.goto_xyz_rpy(0.0, 1.0, alt, 0, 0, 2 * c.pi_2, 2)
-    # c.goto_xyz_rpy(0.0, 0.0, alt, 0, 0, 2 * c.pi_2, 3)
+    rospy.loginfo("Waypoint 1: position control")
+    c.goto_xyz_rpy(0.0, 0.0, alt, 0, 0, -1 * c.pi_2, 2)
+    c.goto_xyz_rpy(2.0, 0.0, alt, 0, 0, -1 * c.pi_2, 3)
+    rospy.loginfo("Waypoint 2: position control")
+    c.goto_xyz_rpy(2.0, 0.0, alt, 0, 0, 0, 2)
+    c.goto_xyz_rpy(2.0, 2.0, alt, 0, 0, 0, 3)
+    rospy.loginfo("Waypoint 3: position control")
+    c.goto_xyz_rpy(2.0, 2.0, alt, 0, 0, c.pi_2, 2)
+    c.goto_xyz_rpy(0.0, 2.0, alt, 0, 0, c.pi_2, 3)
+    rospy.loginfo("Waypoint 4: position control")
+    c.goto_xyz_rpy(0.0, 2.0, alt, 0, 0, 2 * c.pi_2, 2)
+    c.goto_xyz_rpy(0.0, 0.0, alt, 0, 0, 2 * c.pi_2, 3)
 
     rospy.loginfo("Landing")
-    # c.land()
+    c.land()
 
-    c.goto_xyz_rpy(0, 0, 0, 0, 0, 0, 5)
-    c.arm(False)
+    # c.goto_xyz_rpy(0, 0, 0, 0, 0, 2 * c.pi_2, 5)
+    # c.arm(False)
 
 if __name__ == "__main__":
     simple_demo()

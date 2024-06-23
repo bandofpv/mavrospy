@@ -7,9 +7,8 @@
 ##
 
 import rospy
+from builtins import object
 from pymavlink.dialects.v10 import common as MAV_COMMON
-from mavros.mavlink import convert_to_rosmsg
-from mavros_msgs.msg import Mavlink
 
 # Global position of the origin
 lat = 38.9853504 * 1e7   # Hopper Hall 389853504
@@ -26,57 +25,53 @@ class fifo(object):
     def read(self):
         return self.buf.pop(0)
 
-def send_message(msg, mav, pub):
+
+def send_message(msg, mav):
     """
     Send a mavlink message
     """
     msg.pack(mav)
-    rosmsg = convert_to_rosmsg(msg)
-    pub.publish(rosmsg)
 
-    print("sent message %s" % msg)
-
-def set_global_origin(mav, pub):
+def set_global_origin(mav):
     """
     Send a mavlink SET_GPS_GLOBAL_ORIGIN message, which allows us
     to use local position information without a GPS.
     """
     target_system = mav.srcSystem
-    #target_system = 0   # 0 --> broadcast to everyone
-    lattitude = lat
+    latitude = lat
     longitude = lon
     altitude = alt
 
-    msg = MAV_COMMON.MAVLink_set_gps_global_origin_message(
+    msg = MAV_COMMON.set_gps_global_origin_send(
             target_system,
-            lattitude, 
+            latitude,
             longitude,
             altitude)
 
-    send_message(msg, mav, pub)
+    send_message(msg, mav)
 
 
-def set_home(mav, pub):
+def set_home(mav):
     current = 0
     roll = 0
     pitch = 0
     yaw = 0
 
-    lattitude = lat
+    latitude = lat
     longitude = lon
     altitude = alt
 
-    msg = MAV_COMMON.MAVLink_mav_cmd_do_set_home(
+    msg = MAV_COMMON.mav_cmd_do_set_home_send(
         current,
         roll,
         pitch,
         yaw,
-        lattitude,
+        latitude,
         longitude,
         altitude
     )
 
-    send_message(msg, mav, pub)
+    send_message(msg, mav)
 
 
 def set_home_position(mav, pub):
@@ -113,26 +108,19 @@ def set_home_position(mav, pub):
             approach_y,
             approach_z)
 
-    send_message(msg, mav, pub)
+    send_message(msg, mav)
 
 if __name__=="__main__":
     try:
-        rospy.init_node("origin_publisher")
-        mavlink_pub = rospy.Publisher("/mavlink/to", Mavlink, queue_size=20)
-
         # Set up mavlink instance
         f = fifo()
         mav = MAV_COMMON.MAVLink(f, srcSystem=1, srcComponent=1)
 
-        # wait to initialize
-        while mavlink_pub.get_num_connections() <= 0:
-            pass
-   
         for _ in range(2):
             rospy.sleep(1)
-            set_global_origin(mav, mavlink_pub)
+            set_global_origin(mav)
             # set_home_position(mav, mavlink_pub)
-            set_home(mav, mavlink_pub)
+            set_home(mav)
     except rospy.ROSInterruptException:
         pass
 
