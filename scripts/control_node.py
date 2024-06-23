@@ -67,7 +67,7 @@ class MavController:
                 rospy.logerr(e)
 
             if self.current_state.armed == arm_status:
-                rospy.logerr(f"{info.capitalize()}ed Throttle")
+                rospy.loginfo(f"{info.capitalize()}ed Throttle")
                 return True
 
             self.pause()
@@ -133,14 +133,14 @@ class MavController:
 
         # Takeoff
 
-        # self.goto_xyz_rpy(0, 0, height, 0, 0, 0, timeout)
+        self.goto_xyz_rpy(0, 0, height, 0, 0, 0, timeout)
 
-        explicit_quat = [self.pose.orientation.x, self.pose.orientation.y,
-                         self.pose.orientation.z, self.pose.orientation.w]
-        roll, pitch, yaw = tf.transformations.euler_from_quaternion(explicit_quat)
+        # explicit_quat = [self.pose.orientation.x, self.pose.orientation.y,
+        #                  self.pose.orientation.z, self.pose.orientation.w]
+        # roll, pitch, yaw = tf.transformations.euler_from_quaternion(explicit_quat)
 
         rospy.loginfo("Taking Off")
-        self.goto_xyz_rpy(self.pose.position.x, self.pose.position.y, height, roll, pitch, yaw, timeout)
+        # self.goto_xyz_rpy(self.pose.position.x, self.pose.position.y, height, roll, pitch, yaw, timeout)
 
     def land(self):
         """
