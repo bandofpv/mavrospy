@@ -107,6 +107,7 @@ class MavController:
         Set the given pose as a next set point by sending a SET_POSITION_TARGET_LOCAL_NED message. The copter must be in
         OFFBOARD mode for this to work.
         """
+        # TODO: FIX make seperate buffer??? Not needed if 1 sec goto 0 before arm... test
         if self.current_state.mode != "OFFBOARD":  # require OFFBOARD mode
             return False
 
@@ -185,6 +186,14 @@ class MavController:
 
         rospy.loginfo("Taking Off")
         # self.goto_xyz_rpy(self.pose.position.x, self.pose.position.y, height, roll, pitch, yaw, timeout)
+
+    def test_takeoff(self, height, timeout):
+        """
+        WIP
+        """
+        self.arm(True)
+
+
 
     def land(self):
         """

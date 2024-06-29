@@ -4,6 +4,9 @@ ROS node to interact with [MAVROS](https://wiki.ros.org/mavros) for basic UAV co
 This current repo is supported on a PX4 flight controller with a RPi4 companion computer running Ubuntu 20.04 MATE with 
 ROS Noetic. 
 
+Documentation for motion capture utilizes the 
+[Qualisys Track Manager]("https://www.qualisys.com/software/qualisys-track-manager/").  
+
 ## Usage:
 
 ### TODO: TALK ABOUT HOW TO USE CODE
@@ -363,3 +366,143 @@ $ sudo systemctl status roscore.service ros_package.service
 You should see `Active: active (running)` somewhere in the status report for both services. **CTRL+C** to exit.
 
 You're all set! When you boot up our UAV, switch to `ONBOARD` mode and watch it fly!
+
+## Qualisys Motion Capture
+
+Motion capture allows for non-GPS navigation by sending pose estimation data to the flight controller's EKF. ROS makes 
+this easy as there are drivers and packages that allow us to publish pose topics into the ROS framework. We can then 
+relay those topics directly into MAVROS which will then send the poses to the flight controller. 
+
+This assumes that you have already set up your Qualisys motion capture system and configured a rigid body for your UAV. 
+
+QTM is only supported via Windows, so we will have to use another computer utilizing a linux distro o act as our ROS 
+pose publisher. The best practice is to connect these two machines via ethernet to avoid latency and packet loss. 
+
+### Install ROS Noetic
+
+We need to install ROS on our publishing computer to be able to publish ROS pose topics to your UAV. 
+
+Please note that you must use [Ubuntu 20.04]("https://releases.ubuntu.com/focal/") as that is the supported Ubuntu OS 
+supported on ROS Noetic.
+
+Set up your computer to accept software from packages.ros.org:
+
+```
+$ sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+```
+
+Set up your keys:
+
+```
+$ sudo apt install curl 
+$ curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
+```
+
+Make sure your Debian package index is up-to-date:
+
+```
+$ sudo apt update
+```
+
+Install Desktop-Full:
+
+```
+$ sudo apt install ros-noetic-desktop-full
+```
+
+You must source this script in every bash terminal you use ROS in.
+
+```
+$ source /opt/ros/noetic/setup.bash
+```
+
+It can be convenient to automatically source this script every time a new shell is launched. These commands will do that
+for you:
+
+```
+$ echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
+$ source ~/.bashrc
+```
+
+### Install ROS Driver
+
+To integrate QTM with ROS, we can use this [ROS Driver]("https://github.com/KTH-SML/motion_capture_system/tree/master"). 
+
+Create a [catkin workspace](https://wiki.ros.org/catkin/workspaces) in your publishing computer:
+
+```
+$ mkdir -p ~/catkin_ws/src
+```
+
+Clone the `motion_capture_system` in your catkin workspace and build with `catkin_make`:
+
+```
+$ sudo apt install git
+$ cd ~/catkin_ws/src
+$ git clone https://github.com/KTH-SML/motion_capture_system.git
+$ cd ..
+$ catkin_make
+```
+
+### Setting up SSH
+
+SSH allows us to remotely issue commands to the RPi over Wi-Fi.
+
+Install the `openssh-server` package on your RPi: 
+
+```
+$ sudo apt install openssh-server
+```
+
+The SSH service will start automatically. We can verify this by entering:
+
+```
+$ sudo systemctl status ssh
+```
+
+You should see `Active: active (running)` somewhere in the status report. **CTRL+C** to exit.
+
+On your publishing computer, SSH to your RPi. Make sure you change `username` to your RPi's username and `ip_address` to 
+your RPi's IP address: 
+
+```
+$ ssh username@ip_address
+```
+
+Remember, you can always check your IP address via: 
+
+```
+$ ifconfig
+```
+
+We can now issue commands to our RPi via SSH rather than having it hooked up to a monitor with a mouse and keyboard. 
+
+### ...
+
+In order to publish ROS pose topics from our computer to the RPi, we must establish a 
+[ROS Master]("https://wiki.ros.org/Master"). In our case, we will choose the RPi as the master. 
+
+On your publishing computer, export the following environment variables. Make sure to replace `pub_ip_address` with the 
+IP address of your publishing computer and `master_ip_address` with the IP address of the RPi: 
+
+```
+$ export ROS_IP=pub_ip_address
+$ export ROS_MASTER_URI=http://master_ip_address:11311
+```
+
+On your RPi, export the following environment variables. Make sure to replace both instances of `master_ip_address` with 
+the IP address of your RPi:
+
+```
+$ export ROS_IP=master_ip_address
+$ export ROS_MASTER_URI=http://master_ip_address:11311
+```
+
+# TODO: verify time syncing (should be done automatically...)
+
+# TODO start publishing... explain how to listen to qualisys and vision topics to verify publish and relay (note that 
+# you will have to re-enter env variables for pub computer)
+
+# TODO: modify system service to auto setup variables (not pub computer as we don't want to interfere with other projects)
+
+# TODO: test system service

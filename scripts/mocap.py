@@ -20,9 +20,12 @@ def simple_demo():
             rospy.loginfo("OFFBOARD enabled")
             break
 
-        c.goto_xyz_rpy(0, 0, 0, 0, 0, 0, 0, False)
+        # c.goto_xyz_rpy(0, 0, 0, 0, 0, 0, 0, False)
 
-    c.set_home_position()
+    # c.set_home_position()
+
+    # TODO: Test if this will arm rather than looped goto
+    c.goto_xyz_rpy(0,0, 0, 0, 0, 0, 1)
 
     rospy.loginfo(f"Takeoff: {alt}m")
     c.takeoff(alt, 8)

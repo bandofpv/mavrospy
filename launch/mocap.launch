@@ -7,6 +7,7 @@
 		<arg name="fcu_url" value="$(arg fcu_url)" />
 	</include>
 
+    <!-- Relay Qualisys pose topic to MAVROS vision_pose topic -->
 	<node pkg="topic_tools" type="relay" name="relay" output="screen" args="/qualisys/Bernas_Quad/pose /mavros/vision_pose/pose"/>
 
 	<node pkg="mavrospy" type="mocap.py" name="mavrospy" required="true" output="screen"/>
