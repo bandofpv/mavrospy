@@ -30,8 +30,8 @@ control.
 Connect the flight controller's `TELEM2` `TX`/`RX`/`GND` pins to the complementary `RXD`/`TXD`/`Ground` pins on the RPi4 
 GPIO board:
 
-| PX4 TELEM2 Pin | RPi4 GPIO Pin           |
-| -------------- | ---------------------- |
+| PX4 TELEM2 Pin | RPi4 GPIO Pin          |
+|----------------|------------------------|
 | UART5_TX (2)   | RXD (GPIO 15 - pin 10) |
 | UART5_RX (3)   | TXD (GPIO 14 - pin 8)  |
 | GND (6)        | Ground (pin 6)         |
@@ -43,7 +43,7 @@ This diagram shows the RPi4 GPIO board pinout:
 The standard `TELEM2` pin assignments are shown below:
 
 | Pins      | Signal          | Voltage |
-| --------- |-----------------| ------- |
+|-----------|-----------------|---------|
 | 1 (Red)   | VCC (out)       | +5V     |
 | 2 (Black) | UART5_TX (out)  | +3.3V   |
 | 3 (Black) | UART5_RX (in)   | +3.3V   |
@@ -294,7 +294,7 @@ WantedBy=multi-user.target
 
 Save and exit the file.
 
-Create a system service to source all the mavrospy environment variables and run ROS launch: 
+Create a system service to source all the MAVROSPY environment variables and run ROS launch: 
 
 ```
 $ sudo nano /usr/sbin/mavrospy_auto_launch
@@ -424,7 +424,7 @@ $ echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
 $ source ~/.bashrc
 ```
 
-### Install ROS Driver
+### Install Motion Capture ROS Driver
 
 To integrate QTM with ROS, we can use this [ROS Driver]("https://github.com/KTH-SML/motion_capture_system/tree/master"). 
 
@@ -477,7 +477,9 @@ $ ifconfig
 
 We can now issue commands to our RPi via SSH rather than having it hooked up to a monitor with a mouse and keyboard. 
 
-### ...
+# TODO Add instructions for flight controller parameters!!!
+
+### Publish Motion Capture Pose Topic
 
 In order to publish ROS pose topics from our computer to the RPi, we must establish a 
 [ROS Master]("https://wiki.ros.org/Master"). In our case, we will choose the RPi as the master. 
@@ -498,11 +500,109 @@ $ export ROS_IP=master_ip_address
 $ export ROS_MASTER_URI=http://master_ip_address:11311
 ```
 
-# TODO: verify time syncing (should be done automatically...)
+For the pose topic to be understood properly between computers, it's important that both machines are in sync. On both 
+systems, run: 
 
-# TODO start publishing... explain how to listen to qualisys and vision topics to verify publish and relay (note that 
-# you will have to re-enter env variables for pub computer)
+```
+$ timedatectl
+```
 
-# TODO: modify system service to auto setup variables (not pub computer as we don't want to interfere with other projects)
+In the output, you should see: 
+
+```
+System clock synchronized: yes
+NTP service: active
+```
+
+If the output indicates that the NTP service isn't active, turn it on via: 
+
+```
+$ sudo timedatectl set-ntp on
+```
+
+After this, run `timedatectl` again to confirm the network time status. 
+
+If the output indicates that the NTP service is active but not synchronized, it is possible that your firewall is 
+blocking access to an NTP server. We can check if this is the case via: 
+
+```
+
+```
+
+# TODO: what does the timeout output look like?
+
+With both systems in sync, we can start publishing pose topics. 
+
+First, kill any pre-existing ROS nodes via:
+
+```
+$ rosnode kill -a
+```
+
+# TODO: check this command ^^^^
+
+Now start publishing. On your publishing computer, enter: 
+
+```
+$ roslaunch mocap_qualisys qualisys.launch  server_address:=qtm_server_address
+```
+
+Where `qtm_server_address` is the IP address to your QTM server.
+
+To verify your pose topics are being published, run: 
+
+```
+$ rostopic echo /qualisys/rigid_body_name/pose
+```
+
+Where `rigid_body_name` is the name of your rigid body in QTM.
+
+You can now start our motion capture control node on our RPi via: 
+
+```
+$ roslaunch mavrospy mocap.launch fcu_url:=/dev/serial0:921600
+```
+
+We can verify that our RPi is receiving our pose topic via: 
+
+```
+$ rostopic echo /mavros/vision_pose/pose
+```
+
+You can now switch to OFFBOARD mode and watch it fly!
+
+### Set Up Environment Variables on Boot
+
+Everytime you want to launch the motion capture control node on a new boot, you will have to set up your environment 
+variables each time. This can be a little tedious. 
+
+Similar to before, we can utilize our system services. Edit our file auto launch file from before.  
+
+```
+$ sudo nano /usr/sbin/mavrospy_auto_launch
+```
+
+Delete the existing text and add the following, changing both occurrences of `your_username` to your RPi's username, 
+`pub_ip_address` is your publishing computer's IP address and `master_ip_address` is your RPi's IP address:
+
+```
+#!/bin/bash
+source $(echo ~your_username)/catkin_ws/devel/setup.bash
+
+source /etc/ros/env.sh
+
+export ROS_HOME=$(echo ~your_username)/.ros
+
+export ROS_IP=pub_ip_address
+export ROS_MASTER_URI=http://master_ip_address:11311
+
+exit 125
+```
 
 # TODO: test system service
+
+Restart the RPi. 
+
+Now upon boot, you only need to set up environment variables for the publishing computer. This is ok because you will 
+most likely be running other programs on your publishing computer in the future. Creating a system service could 
+interfere with this. 
