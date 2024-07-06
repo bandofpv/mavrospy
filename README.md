@@ -240,8 +240,6 @@ $ source ~/.bashrc
 
 ### Test MAVROSPY
 
-### sudo apt install python-is-python3... OR just change shebang /usr/bin/env python3
-
 You can test MAVROSPY is working correctly by issuing the following command: 
 
 ```
