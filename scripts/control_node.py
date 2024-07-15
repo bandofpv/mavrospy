@@ -108,8 +108,8 @@ class MavController:
         OFFBOARD mode for this to work.
         """
         # TODO: FIX make seperate buffer??? Not needed if 1 sec goto 0 before arm... test
-        if self.current_state.mode != "OFFBOARD":  # require OFFBOARD mode
-            return False
+        # if self.current_state.mode != "OFFBOARD":  # require OFFBOARD mode
+            # return False
 
         # initialize ROS PoseStamped message
         pose_stamped = PoseStamped()
