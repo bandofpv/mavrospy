@@ -106,8 +106,7 @@ The result of the command should include the RX/TX connection `/dev/serial0`
 [MAVLink](https://mavlink.io/en/) is the default and stable communication interface for working with PX4.
 
 
-We can test that the RPi and flight controller are communicating with each other via a simple developer MAVLink GCS 
-called `mavproxy`.
+We can test that the RPi and flight controller are communicating with each other via a MAVLink GCS called `mavproxy`.
 
 Install MAVProxy:
 
@@ -128,11 +127,9 @@ RPi terminal. **CTRL+C** to exit.
 
 ### Install ROS Noetic
 
-[ROS](http://www.ros.org/) is a general purpose robotics library that can be used with PX4 for drone application 
-development.
+[ROS](http://www.ros.org/) is a general purpose robotics library that can be used with PX4 for drone application development.
 
-These instructions are a simplified version of the 
-[official installation guide](https://wiki.ros.org/noetic/Installation/Ubuntu).
+These instructions are a simplified version of the [official installation guide](https://wiki.ros.org/noetic/Installation/Ubuntu).
 
 Set up your computer to accept software from packages.ros.org: 
 
@@ -173,6 +170,16 @@ $ echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
 $ source ~/.bashrc
 ```
 
+### Test ROS Noetic
+
+You can test ROS was installed properly by verifying its version:
+
+```
+$ rosversion -d
+```
+
+It should return `noetic`.
+
 ### Install MAVROS
 
 [MAVROS](https://wiki.ros.org/mavros) is a ROS 1 package that enables MAVLink extendable communication between computers 
@@ -196,7 +203,7 @@ $ wget https://raw.githubusercontent.com/mavlink/mavros/master/mavros/scripts/in
 $ sudo bash ./install_geographiclib_datasets.sh
 ```
 
-### Test MAVROS 
+### Test MAVROS
 
 You can test MAVROS is working correctly by issuing the following command:
 
@@ -373,8 +380,8 @@ relay those topics directly into MAVROS which will then send the poses to the fl
 
 This assumes that you have already set up your Qualisys motion capture system and configured a rigid body for your UAV. 
 
-QTM is only supported via Windows, so we will have to use another computer utilizing a linux distro o act as our ROS 
-pose publisher. The best practice is to connect these two machines via ethernet to avoid latency and packet loss. 
+QTM is only supported via Windows, so we will have to use another computer utilizing a Linux distro o act as our ROS 
+pose publisher. The best practice is to connect these two machines via Ethernet to avoid latency and packet loss. 
 
 ### Install ROS Noetic
 
@@ -571,7 +578,7 @@ You can now switch to OFFBOARD mode and watch it fly!
 
 ### Set Up Environment Variables on Boot
 
-Everytime you want to launch the motion capture control node on a new boot, you will have to set up your environment 
+Every time you want to launch the motion capture control node on a new boot, you will have to set up your environment 
 variables each time. This can be a little tedious. 
 
 Similar to before, we can utilize our system services. Edit our file auto launch file from before.  
@@ -604,3 +611,239 @@ Restart the RPi.
 Now upon boot, you only need to set up environment variables for the publishing computer. This is ok because you will 
 most likely be running other programs on your publishing computer in the future. Creating a system service could 
 interfere with this. 
+
+## Develop Environment
+
+Setting up a develop environment on your desktop machine is helpful for running simulations and testing out your own movement scripts before testing it on your live UAVu
+
+If you have not already, make sure you are running [Ubuntu 20.04](https://releases.ubuntu.com/focal/) as that is what is supported for ROS Noetic.
+
+### Install MAVLink
+
+[MAVLink](https://mavlink.io/en/) is the default and stable communication interface for working with PX4.
+
+
+We can install and test MAVLink via a MAVLink GCS called `mavproxy`.
+
+Install MAVProxy:
+
+```
+$ sudo apt install python3-pip
+$ sudo pip3 install mavproxy
+$ sudo apt remove modemmanager
+```
+
+Run MAVProxy:
+
+```
+$ sudo mavproxy.py
+```
+
+MAVProxy should run with no errors and enter the MAVLink console. **CTRL+C** to exit.
+
+### Install ROS Noetic
+
+[ROS](http://www.ros.org/) is a general purpose robotics library that can be used with PX4 for drone application 
+development.
+
+These instructions are a simplified version of the 
+[official installation guide](https://wiki.ros.org/noetic/Installation/Ubuntu).
+
+Set up your computer to accept software from packages.ros.org: 
+
+```
+$ sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+```
+
+Set up your keys: 
+
+```
+$ sudo apt install curl 
+$ curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
+```
+
+Make sure your Debian package index is up-to-date:
+
+```
+$ sudo apt update
+```
+
+Install Desktop-Full:
+
+```
+$ sudo apt install ros-noetic-desktop-full
+```
+
+You must source this script in every bash terminal you use ROS in.
+
+```
+$ source /opt/ros/noetic/setup.bash
+```
+
+It can be convenient to automatically source this script every time a new shell is launched. These commands will do that 
+for you:
+
+```
+$ echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
+$ source ~/.bashrc
+```
+
+### Test ROS Noetic
+
+You can test ROS was installed properly by verifying its version:
+
+```
+$ rosversion -d
+```
+
+It should return `noetic`.
+
+### Install MAVROS
+
+[MAVROS](https://wiki.ros.org/mavros) is a ROS 1 package that enables MAVLink extendable communication between computers 
+running ROS 1 for any MAVLink enabled autopilot, ground station, or peripheral. MAVROS is the "official" supported 
+bridge between ROS 1 and the MAVLink protocol.
+
+These instructions are a simplified version of the 
+[official installation guide](https://github.com/mavlink/mavros/blob/master/mavros/README.md#installation)
+
+Enter the following command to install MAVROS:
+
+```
+$ sudo apt install ros-noetic-mavros ros-noetic-mavros-extras ros-noetic-mavros-msgs
+```
+
+Then install [GeographicLib](https://geographiclib.sourceforge.io/) datasets by running the 
+`install_geographiclib_datasets.sh` script:
+
+```
+$ wget https://raw.githubusercontent.com/mavlink/mavros/master/mavros/scripts/install_geographiclib_datasets.sh
+$ sudo bash ./install_geographiclib_datasets.sh
+```
+
+### Test MAVROS
+
+You can test MAVROS is working correctly by issuing the following command:
+
+```
+$ roslaunch mavros px4.launch fcu_url:=udp://:14540@localhost:14557
+```
+
+This will launch the mavros node and connect locally. **CTRL+C** to exit.
+
+### Install MAVROSPY
+
+Create a [catkin workspace](https://wiki.ros.org/catkin/workspaces): 
+
+```
+$ mkdir -p ~/catkin_ws/src
+```
+
+Clone `mavrospy` in your catkin workspace and build with `catkin_make`: 
+
+```
+$ sudo apt install git
+$ cd ~/catkin_ws/src
+$ git clone https://github.com/bandofpv/mavrospy.git
+$ cd ..
+$ catkin_make
+```
+
+Similar with ROS, you must source this script in every bash terminal you use MAVROSPY in.
+
+```
+$ source ~/catkin_ws/devel/setup.bash
+```
+
+It can be convenient to automatically source this script every time a new shell is launched. These commands will do that for you:
+
+```
+$ echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc
+$ source ~/.bashrc
+```
+
+### Test MAVROSPY
+
+You can test MAVROSPY is working correctly by issuing the following command: 
+
+```
+$ roslaunch mavrospy control_test.launch fcu_url:=udp://:14540@localhost:14557
+```
+
+This will launch the mavros & mavrospy node and connect locally. **CTRL+C** to exit.
+
+### Install QGroundControl
+
+[QGroundControl](https://qgroundcontrol.com/) is a ground control station using the MAVLink communication protocol. It offers more functionality compared to MAVProxy, most notably its GUI.
+
+These instructions are a simplified version of the [official installation guide](https://docs.qgroundcontrol.com/master/en/qgc-user-guide/getting_started/download_and_install.html#ubuntu).
+
+Grant yourself access to the serial ports and install dependencies:
+
+```
+$ sudo usermod -a -G dialout $USER
+$ sudo apt install gstreamer1.0-plugins-bad gstreamer1.0-libav gstreamer1.0-gl
+$ sudo apt install libfuse2
+$ sudo apt install libxcb-xinerama0 libxkbcommon-x11-0 libxcb-cursor0
+```
+
+Logout and login again to enable the change to user permissions.
+
+Navigate to the latest [QGroundControl Release](https://github.com/mavlink/qgroundcontrol/releases) and download the file named `QGroundControl.AppImage`.
+
+Enter the directory where it downloaded. Make it an executable and run:
+
+```
+$ chmod +x ./QGroundControl.AppImage
+$ ./QGroundControl.AppImage
+```
+
+QGroundControl will open. Go ahead an close it after setting up your prefrences.
+
+### Install PX4 Development Toolchain
+
+The [PX4 Development Toolchain](https://docs.px4.io/main/en/development/development.html) allows us to install [Gazebo Classic](https://classic.gazebosim.org/) which is a 3D robotic simulator to simulate our drone on our development computer.
+
+In your home directory, download the PX4 source code:
+
+```
+$ cd ~
+$ git clone https://github.com/PX4/PX4-Autopilot.git --recursive
+```
+
+Run the `ubuntu.sh` shell executable to install everything: 
+
+```
+$ bash ./PX4-Autopilot/Tools/setup/ubuntu.sh
+```
+
+Ensure that the PX4 SITL is included in the path by adding the following lines to the end of `~/.bashrc`:
+
+```
+source ~/PX4-Autopilot/Tools/simulation/gazebo-classic/setup_gazebo.bash ~/PX4-Autopilot ~/PX4-Autopilot/build/px4_sitl_default
+export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:~/PX4-Autopilot
+export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:~/PX4-Autopilot/Tools/simulation/gazebo-classic/sitl_gazebo-classic
+```
+
+Restart your computer.
+
+### Test PX4 Development Toolchain
+
+We can test we installed the PX4 Dev Toolchain by running a Gazebo simulation.
+
+First, compile the PX4 SITL:
+
+```
+$ cd ~/PX4-Autopilot
+$ DONT_RUN=1 make px4_sitl_default gazebo-classic
+```
+
+Then, launch a simulation:
+
+```
+$ roslaunch mavrospy sim_square.launch fcu_url:=udp://:14540@127.0.0.1:14557
+```
+
+Gazebo should open up and display a quadcopter model.
+
+Open up QGroundControl and you should see that it automatically connects to your simulated quadcopter. At the top left, you can change the mode from `Hold` to `Offboard`. Go back to the Gazebo simulation and watch the quadcopter takeoff and fly in a square!
