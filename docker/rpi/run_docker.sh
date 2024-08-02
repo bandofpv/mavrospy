@@ -23,7 +23,7 @@ if [[ ! $(groups $USER) =~ $RE ]]; then
 fi
 
 # Check if able to run docker commands.
-if [[ -z "$(docker ps)" ]] ;  then
+if [[ -z "$(docker ps)" ]];  then
     echo "Unable to run docker commands. If you have recently added |$USER| to 'docker' group, you may need to log out and log back in for it to take effect."
     echo "Otherwise, please check your Docker installation."
     exit 1
@@ -36,8 +36,8 @@ fi
 
 # Re-use existing container.
 if [ "$(docker ps -a --quiet --filter status=running --filter name=$CONTAINER_NAME)" ]; then
-    print_info "Attaching to running container: $CONTAINER_NAME"
-    docker exec -i -t -u admin --workdir /workspaces/isaac_ros-dev $CONTAINER_NAME /bin/bash $@
+    echo "Attaching to running container: $CONTAINER_NAME"
+    docker exec -it $CONTAINER_NAME bash
     exit 0
 fi
 
@@ -51,7 +51,7 @@ if image_exists; then
   echo "Docker image $IMAGE_NAME:$IMAGE_TAG already exists."
 else
   echo "Docker image $IMAGE_NAME:$IMAGE_TAG does not exist. Building it now..."
-  docker build -t "$IMAGE_NAME:$IMAGE_TAG" -f "$DOCKERFILE_PATH" .
+  docker build --network=host -t "$IMAGE_NAME:$IMAGE_TAG" -f "$DOCKERFILE_PATH" .
 
   # Check if the build was successful
   if image_exists; then
@@ -62,4 +62,6 @@ else
   fi
 fi
 
-
+# Run docker container
+echo "Running $IMAGE_NAME:$IMAGE_TAG."
+docker run -it --rm --name $CONTAINER_NAME --device=/dev/serial0 --net=host $IMAGE_NAME:$IMAGE_TAG

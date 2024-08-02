@@ -49,9 +49,12 @@ RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && rosdep update" && \
 # Build the ROS workspace
 RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && catkin_make"
 
-# Add ROS Environment Setup to .bashrc
+# Add start up commands to .bashrc
 RUN echo "source /opt/ros/noetic/setup.bash" >> /home/rpi/.bashrc && \
-    echo "source /home/rpi/catkin_ws/devel/setup.bash" >> /home/rpi/.bashrc
+    echo "source /home/rpi/catkin_ws/devel/setup.bash" >> /home/rpi/.bashrc && \
+    echo "sudo chown rpi /dev/serial0" >> /home/rpi/.bashrc && \
+    echo "export ROS_IP=$(hostname -I | awk '{print $1}')" >> /home/rpi/.bashrc && \
+    echo "export ROS_MASTER_URI=http://$(hostname -I | awk '{print $1}'):11311" >> /home/rpi/.bashrc
 
 # Set up entrypoint
 ENTRYPOINT ["/bin/bash"]
