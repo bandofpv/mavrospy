@@ -28,7 +28,6 @@ class MavController:
         # create services
         self.mode_service = rospy.ServiceProxy('/mavros/set_mode', SetMode)
         self.arm_service = rospy.ServiceProxy('/mavros/cmd/arming', CommandBool)
-        self.home_service = rospy.ServiceProxy('/mavros/cmd/set_home', CommandHome)
 
         # initialize ROS messages
         self.pose = Pose()
@@ -45,7 +44,7 @@ class MavController:
         self.lon = -764857648  # Hopper Hall -764857648
         self.alt = 36810  # Hopper Hall 36810
 
-        rospy.loginfo("MavController Initiated")
+        self.log_info("MavController Initiated")
 
     def state_callback(self, data):
         self.current_state = data
@@ -57,6 +56,14 @@ class MavController:
         self.timestamp = data.header.stamp  # timestamp pose message
         self.pose = data.pose
 
+    def log_info(self, info):
+        if not rospy.is_shutdown():
+            rospy.loginfo(info)
+
+    def log_error(self, error):
+        if not rospy.is_shutdown():
+            rospy.logerr(error_message)
+
     def pause(self):
         """
         Pause at given rate
@@ -64,18 +71,7 @@ class MavController:
         try:
             self.rate.sleep()
         except rospy.ROSException as e:
-            rospy.logerr(e)
-
-    def set_home_position(self):
-        """
-        WIP
-        """
-        try:
-            resp = self.home_service(latitude=self.lat, longitude=self.lon, altitude=self.alt)
-            if not resp.success:
-                rospy.logerr("Failed to set home position")
-        except rospy.ServiceException as e:
-            rospy.logerr(e)
+            self.log_error(e)
 
     def arm(self, arm_status, timeout=5):
         """
@@ -88,29 +84,24 @@ class MavController:
                 try:
                     resp = self.arm_service(arm_status)  # set arm status
                     if not resp.success:
-                        rospy.logerr(f"Failed to send {info} command")
+                        self.log_error(f"Failed to send {info} command")
                 except rospy.ServiceException as e:
-                    rospy.logerr(e)
+                    self.log_error(e)
 
                 if self.current_state.armed == arm_status:  # break when arm status is set
-                    rospy.loginfo(f"{info.capitalize()}ed Throttle")
+                    self.log_info(f"{info.capitalize()}ed Throttle")
                     return True
 
                 self.pause()
 
-            rospy.logerr(f"Failed to {info} throttle in {timeout} seconds")
+            self.log_error(f"Failed to {info} throttle in {timeout} seconds")
         except rospy.ROSException as e:
-            rospy.logerr(e)
+            self.log_error(e)
 
     def goto(self, pose):
         """
-        Set the given pose as a next set point by sending a SET_POSITION_TARGET_LOCAL_NED message. The copter must be in
-        OFFBOARD mode for this to work.
+        Set the given pose as a next set point by sending a SET_POSITION_TARGET_LOCAL_NED message. The copter must be in OFFBOARD mode for this to work.
         """
-        # TODO: FIX make seperate buffer??? Not needed if 1 sec goto 0 before arm... test
-        # if self.current_state.mode != "OFFBOARD":  # require OFFBOARD mode
-            # return False
-
         # initialize ROS PoseStamped message
         pose_stamped = PoseStamped()
         pose_stamped.header.stamp = self.timestamp
@@ -119,7 +110,7 @@ class MavController:
         try:
             self.cmd_pos_pub.publish(pose_stamped)  # publish PoseStamed message
         except rospy.ROSException as e:
-            rospy.logerr(e)
+            self.log_error(e)
 
     def goto_xyz_rpy(self, x, y, z, roll, pitch, yaw, timeout, loop=True):
         """
@@ -148,26 +139,6 @@ class MavController:
             self.goto(pose)  # go to given pose
             self.pause()
 
-    def set_vel(self, vx, vy, vz, avx, avy, avz, timeout):
-        """
-        Send command velocities. Must be in OFFBOARD mode. Assumes angular velocities are zero by default.
-
-        WIP
-        """
-        cmd_vel = Twist()
-
-        cmd_vel.linear.x = vx
-        cmd_vel.linear.y = vy
-        cmd_vel.linear.z = vz
-
-        cmd_vel.angular.x = avx
-        cmd_vel.angular.y = avy
-        cmd_vel.angular.z = avz
-
-        for i in range(timeout * self.freq):
-            self.cmd_vel_pub.publish(cmd_vel)
-            self.pause()
-
     def takeoff(self, height, timeout):
         """
         Arm the throttle and takeoff to a few feet
@@ -184,7 +155,7 @@ class MavController:
         #                  self.pose.orientation.z, self.pose.orientation.w]
         # roll, pitch, yaw = tf.transformations.euler_from_quaternion(explicit_quat)
 
-        rospy.loginfo("Taking Off")
+        self.log_info("Taking Off")
         # self.goto_xyz_rpy(self.pose.position.x, self.pose.position.y, height, roll, pitch, yaw, timeout)
 
     def test_takeoff(self, height, timeout):
@@ -193,30 +164,28 @@ class MavController:
         """
         self.arm(True)
 
-
-
     def land(self):
         """
         Set mode to AUTO.LAND for immediate descent and disarm when on ground.
         """
-        rospy.loginfo("Changing Mode: AUTO.LAND")
+        self.log_info("Changing Mode: AUTO.LAND")
 
-        while True:
+        while not rospy.is_shutdown():
             try:
                 resp = self.mode_service(custom_mode="AUTO.LAND")  # set mode to AUTO.LAND
                 if not resp.mode_sent:
-                    rospy.logerr("Failed to Change Mode: AUTO.LAND")
+                    self.log_error("Failed to Change Mode: AUTO.LAND")
             except rospy.ServiceException as e:
-                rospy.logerr(e)
+                self.log_error(e)
 
             # break when on the ground
             if self.current_extended_state.landed_state == mavutil.mavlink.MAV_LANDED_STATE_ON_GROUND:
                 break
             self.pause()
 
-        rospy.loginfo("Landed")
+        self.log_info("Landed")
 
         self.arm(False)  # disarm throttle
-        rospy.loginfo("Disarmed")
+        self.log_info("Disarmed")
 
 # TODO: relative ned AND vel (after sitl with current setup)

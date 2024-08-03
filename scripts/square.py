@@ -17,30 +17,30 @@ def simple_demo():
 
     while not rospy.is_shutdown():
         if c.current_state.mode == "OFFBOARD":
-            rospy.loginfo("OFFBOARD enabled")
+            c.log_info("OFFBOARD enabled")
             break
 
         explicit_quat = [c.pose.orientation.x, c.pose.orientation.y, c.pose.orientation.z, c.pose.orientation.w]
         roll, pitch, yaw = tf.transformations.euler_from_quaternion(explicit_quat)
         c.goto_xyz_rpy(c.pose.position.x, c.pose.position.y, c.pose.position.z, roll, pitch, yaw, 0, False)
 
-    rospy.loginfo(f"Takeoff: {alt}m")
+    c.log_info(f"Takeoff: {alt}m")
     c.takeoff(alt, 8)
 
-    rospy.loginfo("Waypoint 1: position control")
+    c.log_info("Waypoint 1: position control")
     c.goto_xyz_rpy(0.0, 0.0, alt, 0, 0, -1 * c.pi_2, 2)
     c.goto_xyz_rpy(10.0, 0.0, alt, 0, 0, -1 * c.pi_2, 6)
-    rospy.loginfo("Waypoint 2: position control")
+    c.log_info("Waypoint 2: position control")
     c.goto_xyz_rpy(10.0, 0.0, alt, 0, 0, 0, 2)
     c.goto_xyz_rpy(10.0, 10.0, alt, 0, 0, 0, 6)
-    rospy.loginfo("Waypoint 3: position control")
+    c.log_info("Waypoint 3: position control")
     c.goto_xyz_rpy(10.0, 10.0, alt, 0, 0, c.pi_2, 2)
     c.goto_xyz_rpy(0.0, 10.0, alt, 0, 0, c.pi_2, 6)
-    rospy.loginfo("Waypoint 4: position control")
+    c.log_info("Waypoint 4: position control")
     c.goto_xyz_rpy(0.0, 10.0, alt, 0, 0, 2 * c.pi_2, 2)
     c.goto_xyz_rpy(0.0, 0.0, alt, 0, 0, 2 * c.pi_2, 6)
 
-    rospy.loginfo("Landing")
+    c.log_info("Landing")
     c.land()
 
 

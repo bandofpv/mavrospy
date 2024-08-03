@@ -17,7 +17,7 @@ def simple_demo():
 
     while not rospy.is_shutdown():
         if c.current_state.mode == "OFFBOARD":
-            rospy.loginfo("OFFBOARD enabled")
+            c.log_info("OFFBOARD enabled")
             break
 
         # c.goto_xyz_rpy(0, 0, 0, 0, 0, 0, 0, False)
@@ -27,23 +27,23 @@ def simple_demo():
     # TODO: Test if this will arm rather than looped goto
     c.goto_xyz_rpy(0,0, 0, 0, 0, 0, 1)
 
-    rospy.loginfo(f"Takeoff: {alt}m")
+    c.log_info(f"Takeoff: {alt}m")
     c.takeoff(alt, 8)
 
-    rospy.loginfo("Waypoint 1: position control")
+    c.log_info("Waypoint 1: position control")
     c.goto_xyz_rpy(0.0, 0.0, alt, 0, 0, -1 * c.pi_2, 2)
     c.goto_xyz_rpy(2.0, 0.0, alt, 0, 0, -1 * c.pi_2, 3)
-    rospy.loginfo("Waypoint 2: position control")
+    c.log_info("Waypoint 2: position control")
     c.goto_xyz_rpy(2.0, 0.0, alt, 0, 0, 0, 2)
     c.goto_xyz_rpy(2.0, 2.0, alt, 0, 0, 0, 3)
-    rospy.loginfo("Waypoint 3: position control")
+    c.log_info("Waypoint 3: position control")
     c.goto_xyz_rpy(2.0, 2.0, alt, 0, 0, c.pi_2, 2)
     c.goto_xyz_rpy(0.0, 2.0, alt, 0, 0, c.pi_2, 3)
-    rospy.loginfo("Waypoint 4: position control")
+    c.log_info("Waypoint 4: position control")
     c.goto_xyz_rpy(0.0, 2.0, alt, 0, 0, 2 * c.pi_2, 2)
     c.goto_xyz_rpy(0.0, 0.0, alt, 0, 0, 2 * c.pi_2, 3)
 
-    rospy.loginfo("Landing")
+    c.log_info("Landing")
     # c.land()
 
     c.goto_xyz_rpy(0, 0, 0, 0, 0, 2 * c.pi_2, 5)
