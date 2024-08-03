@@ -4,7 +4,7 @@ import rospy
 from pymavlink import mavutil
 from mavros_msgs.msg import State, ExtendedState
 from geometry_msgs.msg import Pose, PoseStamped, Twist, Quaternion
-from mavros_msgs.srv import CommandBool, CommandBoolRequest, SetMode, SetModeRequest, CommandHome
+from mavros_msgs.srv import CommandBool, CommandBoolRequest, SetMode, SetModeRequest
 
 
 class MavController:
@@ -72,6 +72,29 @@ class MavController:
             self.rate.sleep()
         except rospy.ROSException as e:
             self.log_error(e)
+
+    from mavros_msgs.srv import CommandLong
+
+    def set_gps_global_origin(self):
+        # rospy.wait_for_service('/mavros/cmd/command')
+        try:
+            command_service = rospy.ServiceProxy('/mavros/cmd/command', CommandLong)
+            response = command_service(
+                broadcast=False,
+                command=48,    # MAV_CMD_SET_GPS_GLOBAL_ORIGIN
+                confirmation=0,
+                param1=0,      # Target system ID, 0 for the current system
+                param2=0,
+                param3=0,
+                param4=0,
+                param5=self.lat,
+                param6=self.long,
+                param7=self.alt
+            )
+            return response.success
+        except rospy.ServiceException as e:
+            rospy.logerr("Service call failed: %s" % e)
+            return False
 
     def arm(self, arm_status, timeout=5):
         """
