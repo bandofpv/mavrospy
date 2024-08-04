@@ -2,7 +2,7 @@
 
 import tf
 import rospy
-from control_node import MavController
+from control_node import MavrospyController
 
 
 def simple_demo():
@@ -12,7 +12,7 @@ def simple_demo():
     # Setpoint publishing MUST be faster than 2Hz
     rate = 20
 
-    c = MavController(rate)
+    c = MavrospyController(rate)
     alt = 2.0
 
     while not rospy.is_shutdown():

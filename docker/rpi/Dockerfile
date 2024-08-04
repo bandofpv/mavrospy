@@ -56,5 +56,8 @@ RUN echo "source /opt/ros/noetic/setup.bash" >> /home/rpi/.bashrc && \
     echo "export ROS_IP=$(hostname -I | awk '{print $1}')" >> /home/rpi/.bashrc && \
     echo "export ROS_MASTER_URI=http://$(hostname -I | awk '{print $1}'):11311" >> /home/rpi/.bashrc
 
+# Start in MAVROSPY direcotry
+WORKDIR /home/rpi/catkin_ws/src/mavrospy
+
 # Set up entrypoint
 ENTRYPOINT ["/bin/bash"]

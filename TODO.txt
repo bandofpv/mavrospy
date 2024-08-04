@@ -1,0 +1,19 @@
+ROS1 Bridge --> export image
+--> Check out two other Dockerfiles to see how to build
+--> Test image exporting if you have to
+
+Simulate Square, Circle, and Infinity for both normal and head rotation
+
+Record outside square
+
+Setup Jetson Nano 2GB
+
+Intel Camera --> rosbag
+
+RViz
+
+Get GPS Origin and Home working
+
+Get takeoff working??? DONT need for mocap.
+
+Set ENV in dev Dockerfile to export ROS_IP and ROS_MASTER_URI

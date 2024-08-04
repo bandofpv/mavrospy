@@ -7,14 +7,14 @@ from geometry_msgs.msg import Pose, PoseStamped, Twist, Quaternion
 from mavros_msgs.srv import CommandBool, CommandBoolRequest, SetMode, SetModeRequest
 
 
-class MavController:
+class MavrospyController:
     """
     Controller class to help interface with mavros
     """
 
     def __init__(self, send_rate):
         # initialize our control node
-        rospy.init_node("mav_control_node")
+        rospy.init_node("mavros_node")
 
         # create subscribers
         rospy.Subscriber("mavros/state", State, self.state_callback)
@@ -62,7 +62,7 @@ class MavController:
 
     def log_error(self, error):
         if not rospy.is_shutdown():
-            rospy.logerr(error_message)
+            rospy.logerr(error)
 
     def pause(self):
         """
@@ -135,10 +135,15 @@ class MavController:
         except rospy.ROSException as e:
             self.log_error(e)
 
-    def goto_xyz_rpy(self, x, y, z, roll, pitch, yaw, timeout, loop=True):
+    def goto_xyz_rpy(self, x, y, z, roll, pitch, yaw, timeout, loop=True, checkMode=True):
         """
         Sets the given pose as a next set point for given timeout (seconds).
         """
+        # must be in OFFBOARD mode
+        if checkMode and self.current_state.mode != "OFFBOARD":
+            self.log_error("Cannot execute goto: not in OFFBOARD mode")
+            return False
+
         # initialize Pose message
         pose = Pose()
         pose.position.x = x
