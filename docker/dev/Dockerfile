@@ -13,6 +13,8 @@ RUN apt-get update && apt install -y \
     sudo \
     wget \
     curl \
+    vim \
+    nano \
     net-tools
 
 # Set up dev user
@@ -62,7 +64,8 @@ RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && catkin_make"
 RUN echo "source /opt/ros/noetic/setup.bash" >> /home/dev/.bashrc && \
     echo "source /home/dev/catkin_ws/devel/setup.bash" >> /home/dev/.bashrc && \
     echo "source /home/dev/PX4-Autopilot/Tools/simulation/gazebo-classic/setup_gazebo.bash /home/dev/PX4-Autopilot /home/dev/PX4-Autopilot/build/px4_sitl_default" >> /home/dev/.bashrc && \
-    echo "export ROS_PACKAGE_PATH=/home/dev/catkin_ws/src:/opt/ros/noetic/share:/home/dev/PX4-Autopilot:/home/dev/PX4-Autopilot/Tools/simulation/gazebo-classic/sitl_gazebo-classic" >> /home/dev/.bashrc
+    echo "export ROS_PACKAGE_PATH=/home/dev/catkin_ws/src:/opt/ros/noetic/share:/home/dev/PX4-Autopilot:/home/dev/PX4-Autopilot/Tools/simulation/gazebo-classic/sitl_gazebo-classic" >> /home/dev/.bashrc && \
+    echo "export ROS_IP=$(hostname -I | awk '{print $1}')" >> /home/dev/.bashrc
 
 # Set up entrypoint
 ENTRYPOINT ["/bin/bash"]

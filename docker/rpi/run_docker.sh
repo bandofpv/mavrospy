@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Variables
-IMAGE_NAME="mavrospy-testing"
+IMAGE_NAME="mavrospy-rpi"
 IMAGE_TAG="latest"
 DOCKERFILE_PATH="./Dockerfile"
-CONTAINER_NAME="mavrospy-container"
+CONTAINER_NAME="mavrospy-rpi-container"
 
 # Prevent running as root.
 if [[ $(id -u) -eq 0 ]]; then

@@ -135,7 +135,7 @@ class MavrospyController:
         except rospy.ROSException as e:
             self.log_error(e)
 
-    def goto_xyz_rpy(self, x, y, z, roll, pitch, yaw, timeout, loop=True, checkMode=True):
+    def goto_xyz_rpy(self, x, y, z, roll, pitch, yaw, timeout=30, loop=True, checkMode=True):
         """
         Sets the given pose as a next set point for given timeout (seconds).
         """
@@ -159,15 +159,41 @@ class MavrospyController:
         pose.orientation.z = quaternion[2]
         pose.orientation.w = quaternion[3]
 
+        # check if UAV is close to target setpoint
+        def is_close(target, current, euler=False, tolerance=0.23):
+            # if its a euler angle, change current to be between 0 and 2 pi
+            if euler:
+                while current > 2 * math.pi:
+                    current -= 2 * math.pi
+                while current < 0:
+                    current += 2 * math.pi
+
+            return abs(target - current) < tolerance
+
         if loop:
-            for i in range(timeout * self.freq):  # loop for given timeout
-                self.goto(pose)  # go to given pose
+            for i in range(timeout * self.freq):
+                self.goto(pose)
                 self.pause()
+
+                euler = tf.transformations.euler_from_quaternion(
+                    [self.pose.orientation.x,
+                    self.pose.orientation.y,
+                    self.pose.orientation.z,
+                    self.pose.orientation.w])
+
+                # print(yaw + self.pi_2, yaw + self.pi_2 - math.pi, abs(euler[2]))
+
+                if (is_close(x, self.pose.position.x) and
+                    is_close(y, self.pose.position.y) and
+                    is_close(z, self.pose.position.z) and
+                    is_close(yaw + self.pi_2, euler[2], True)):
+                    self.log_info("Reached target position")
+                    break
         else:
             self.goto(pose)  # go to given pose
             self.pause()
 
-    def takeoff(self, height, timeout):
+    def takeoff(self, height, timeout=30):
         """
         Arm the throttle and takeoff to a few feet
 

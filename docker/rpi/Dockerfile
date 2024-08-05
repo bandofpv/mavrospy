@@ -11,6 +11,8 @@ RUN apt-get update && apt install -y \
     wget \
     net-tools \
     python3-pip \
+    vim \
+    nano \
     openssh-client
 
 # Set up rpi user
