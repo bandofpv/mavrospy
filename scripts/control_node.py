@@ -150,7 +150,6 @@ class MavrospyController:
         pose.position.y = y
         pose.position.z = z
 
-        # TODO: why +pi_2?? test without might be bugging my takeoff
         # convert euler angles (roll, pitch, yaw) to quaternion (x, y, z, w)
         quaternion = tf.transformations.quaternion_from_euler(roll, pitch, yaw + self.pi_2)
 
@@ -159,14 +158,12 @@ class MavrospyController:
         pose.orientation.z = quaternion[2]
         pose.orientation.w = quaternion[3]
 
+        # TODO: play around with tolerance and set tolerance lower or quats... understand quats
+
         # check if UAV is close to target setpoint
-        def is_close(target, current, euler=False, tolerance=0.23):
-            # if its a euler angle, change current to be between 0 and 2 pi
-            if euler:
-                while current > 2 * math.pi:
-                    current -= 2 * math.pi
-                while current < 0:
-                    current += 2 * math.pi
+        def is_close(target, current, height=False, tolerance=0.23):
+            if height:
+                tolerance = 0.5
 
             return abs(target - current) < tolerance
 
@@ -181,12 +178,15 @@ class MavrospyController:
                     self.pose.orientation.z,
                     self.pose.orientation.w])
 
-                # print(yaw + self.pi_2, yaw + self.pi_2 - math.pi, abs(euler[2]))
+                self.log_info(f"{quaternion[0]}, {self.pose.orientation.x} {quaternion[1]}, {self.pose.orientation.y} {quaternion[2]}, {self.pose.orientation.z} {quaternion[3]}, {self.pose.orientation.w}")
 
                 if (is_close(x, self.pose.position.x) and
                     is_close(y, self.pose.position.y) and
-                    is_close(z, self.pose.position.z) and
-                    is_close(yaw + self.pi_2, euler[2], True)):
+                    is_close(z, self.pose.position.z, height=True) and
+                    is_close(abs(quaternion[0]), abs(self.pose.orientation.x)) and
+                    is_close(abs(quaternion[1]), abs(self.pose.orientation.y)) and
+                    is_close(abs(quaternion[2]), abs(self.pose.orientation.z)) and
+                    is_close(abs(quaternion[3]), abs(self.pose.orientation.w))):
                     self.log_info("Reached target position")
                     break
         else:
@@ -241,5 +241,3 @@ class MavrospyController:
 
         self.arm(False)  # disarm throttle
         self.log_info("Disarmed")
-
-# TODO: relative ned AND vel (after sitl with current setup)
