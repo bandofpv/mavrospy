@@ -161,9 +161,9 @@ class MavrospyController:
         # TODO: play around with tolerance and set tolerance lower or quats... understand quats
 
         # check if UAV is close to target setpoint
-        def is_close(target, current, height=False, tolerance=0.23):
-            if height:
-                tolerance = 0.5
+        def is_close(target, current, tolerance, quat=False):
+            if quat:
+                return abs(target - current) < tolerance or abs(target + current) < tolerance
 
             return abs(target - current) < tolerance
 
@@ -172,21 +172,15 @@ class MavrospyController:
                 self.goto(pose)
                 self.pause()
 
-                euler = tf.transformations.euler_from_quaternion(
-                    [self.pose.orientation.x,
-                    self.pose.orientation.y,
-                    self.pose.orientation.z,
-                    self.pose.orientation.w])
-
                 self.log_info(f"{quaternion[0]}, {self.pose.orientation.x} {quaternion[1]}, {self.pose.orientation.y} {quaternion[2]}, {self.pose.orientation.z} {quaternion[3]}, {self.pose.orientation.w}")
 
-                if (is_close(x, self.pose.position.x) and
-                    is_close(y, self.pose.position.y) and
-                    is_close(z, self.pose.position.z, height=True) and
-                    is_close(abs(quaternion[0]), abs(self.pose.orientation.x)) and
-                    is_close(abs(quaternion[1]), abs(self.pose.orientation.y)) and
-                    is_close(abs(quaternion[2]), abs(self.pose.orientation.z)) and
-                    is_close(abs(quaternion[3]), abs(self.pose.orientation.w))):
+                if (is_close(x, self.pose.position.x, 0.2) and
+                    is_close(y, self.pose.position.y, 0.2) and
+                    is_close(z, self.pose.position.z, 0.5) and
+                    is_close(quaternion[0], self.pose.orientation.x, 0.1, True) and
+                    is_close(quaternion[1], self.pose.orientation.y, 0.1, True) and
+                    is_close(quaternion[2], self.pose.orientation.z, 0.1, True) and
+                    is_close(quaternion[3], self.pose.orientation.w, 0.1, True)):
                     self.log_info("Reached target position")
                     break
         else:
