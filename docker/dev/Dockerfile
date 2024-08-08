@@ -24,14 +24,18 @@ RUN useradd -m dev && echo "dev:dev" | chpasswd && adduser dev sudo
 RUN echo "dev ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 # Install Gazebo ROS Packages
-RUN sudo apt install -y ros-noetic-gazebo-ros-pkgs \
+RUN sudo apt install -y \
+    ros-noetic-gazebo-ros-pkgs \
     ros-noetic-gazebo-ros-control
 
 # Install RViz
 RUN sudo apt install -y ros-noetic-rviz
 
 # Install MAVROS
-RUN sudo apt install -y ros-noetic-mavros ros-noetic-mavros-extras ros-noetic-mavros-msgs && \
+RUN sudo apt install -y \
+    ros-noetic-mavros \
+    ros-noetic-mavros-extras \
+    ros-noetic-mavros-msgs && \
     wget https://raw.githubusercontent.com/mavlink/mavros/master/mavros/scripts/install_geographiclib_datasets.sh && \
     sudo bash ./install_geographiclib_datasets.sh
 
@@ -70,8 +74,12 @@ RUN echo "source /opt/ros/noetic/setup.bash" >> /home/dev/.bashrc && \
     echo "export ROS_PACKAGE_PATH=/home/dev/catkin_ws/src:/opt/ros/noetic/share:/home/dev/PX4-Autopilot:/home/dev/PX4-Autopilot/Tools/simulation/gazebo-classic/sitl_gazebo-classic" >> /home/dev/.bashrc && \
     echo "export ROS_IP=$(hostname -I | awk '{print $1}')" >> /home/dev/.bashrc
 
-# Set WORKDIR to src directory
+# Copy RViz configuration
+RUN cp /home/dev/catkin_ws/src/mavrospy/rviz/.....
+
+# Set WORKDIR to src directory and clean package list
 WORKDIR /home/dev/catkin_ws/src
+RUN rm -rf /var/lib/apt/lists/*
 
 # Set up entrypoint
 ENTRYPOINT ["/bin/bash"]

@@ -23,7 +23,7 @@ def fly_square(c, width, height, repetitions, altitude):
         c.goto_xyz_rpy(0.0, 0.0, altitude, 0, 0, 2 * c.pi_2)
 
 
-def normal_square():
+def move():
     """
     Move UAV in a square pattern at given height and width for given
     repititions and altitude levels
@@ -40,8 +40,6 @@ def normal_square():
 
     for l in range(1, levels + 1):
         altitudes.append((max_height * l) / levels)
-
-    # altitudes = [max_height / 3, max_height * 2 / 3, max_height]
 
     while not rospy.is_shutdown():
         if c.current_state.mode == "OFFBOARD":
@@ -62,5 +60,5 @@ def normal_square():
 
 
 if __name__ == "__main__":
-    normal_square()
+    move()
 

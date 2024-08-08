@@ -178,8 +178,6 @@ class MavrospyController:
                 self.goto(pose)
                 self.pause()
 
-                self.log_info(f"{quaternion[0]}, {self.pose.orientation.x} {quaternion[1]}, {self.pose.orientation.y} {quaternion[2]}, {self.pose.orientation.z} {quaternion[3]}, {self.pose.orientation.w}")
-
                 if (is_close(x, self.pose.position.x, 0.2) and
                     is_close(y, self.pose.position.y, 0.2) and
                     is_close(z, self.pose.position.z, 0.5) and
