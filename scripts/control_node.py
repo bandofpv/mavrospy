@@ -162,6 +162,12 @@ class MavrospyController:
 
         # check if UAV is close to target setpoint
         def is_close(target, current, tolerance, quat=False):
+            """
+            Recommended tolerances: point x & y --> 0.2
+                                    point z --> 0.5
+                                    quaternion x, y, z, & w --> 0.1
+            """
+            # if comparing quaternions
             if quat:
                 return abs(target - current) < tolerance or abs(target + current) < tolerance
 

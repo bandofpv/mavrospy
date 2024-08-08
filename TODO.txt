@@ -13,9 +13,3 @@ Intel Camera --> rosbag
 RViz
 
 Get GPS Origin and Home working
-
-Get takeoff working??? DONT need for mocap.
-
-Use takeoff and land service instead of goto and mode switc
-
-Set ENV in dev Dockerfile to export ROS_IP and ROS_MASTER_URI
