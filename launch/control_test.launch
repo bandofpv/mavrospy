@@ -8,5 +8,5 @@
 	</include>
 
 	<!-- Our node to control the drone -->
-	<node pkg="mavrospy" type="square.py" name="mavrospy" required="true" output="screen" />
+	<node pkg="mavrospy" type="outdoor_square.py" name="mavrospy" required="true" output="screen" />
 </launch>

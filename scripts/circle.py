@@ -1,44 +1,74 @@
 #! /usr/bin/env python3
 
-import math
 import rospy
-from control_node import MavController
+import math
+from control_node import MavrospyController  # Assuming control_node.py is in the same directory
 
 
-def simple_demo():
+def fly_circle(c, radius, repetitions, altitude, resolution=180):
     """
-    A simple demonstration of using mavros commands to control a UAV.
+    Fly in a circle pattern facing direction of motion
     """
-    rate = 14
+    for r in range(repetitions):
+        # Generate circle points
+        for i in range(resolution):
+            theta = 2 * math.pi * i / resolution
+            x = radius * math.cos(theta)
+            y = radius * math.sin(theta)
+            yaw = math.atan2(y, x)  # Yaw to face forward along the path
 
-    c = MavController(rate)
+            x += radius
+            y += radius
 
-    alt = 3.0
+            # Command drone to go to each point
+            if i == 1 or i == resolution-1:
+                c.goto_xyz_rpy(x, y, altitude, 0, 0, yaw)
+            else:
+                c.goto_xyz_rpy(x, y, altitude, 0, 0, yaw, 1/20, isClose=False)
 
-    rospy.loginfo("Takeoff " + str(alt))
-    c.takeoff(alt, 8)
-    c.goto_xyz_rpy(0, 0, alt, 0, 0, 0, 3)
+def move():
+    """
+    Move UAV in a circle pattern at given height and width for given
+    repititions and altitude levels
+    """
+    rate = 20
+    c = MavrospyController(rate)
 
-    r = 3.0
-    rospy.loginfo("Moving to center")
-    c.goto_xyz_rpy(2.0, 3.0, alt, 0, 0, 0, 3)
-    rospy.loginfo("Moving to perimeter")
-    c.goto_xyz_rpy(2.0 + r, 3.0, alt, 0, 0, 0, 3)
+    max_height = 6.0  # Max height to fly at
+    max_width = 10.0  # Width of the circle pattern
+    levels = 3  # Number of different altitude to complete square pattern
+    repetitions = 3   # Number of times to repeat the square pattern at each altitude
+    radius = max_width / 2 # Radius of circle pattern
 
-    rospy.loginfo("Starting orbit")
-    for i in range(180):
-        theta = i * 2.0 * math.pi / 180.0
-        x = 2.0 + r * math.cos(theta)
-        y = 3.0 + r * math.sin(theta)
-        z = alt
-        c.goto_xyz_rpy(x, y, z, 0.0, 0.0, theta, 0, False)
+    altitudes = []
 
-    rospy.loginfo("Moving back home")
-    c.goto_xyz_rpy(0.0, 0.0, alt, 0, 0, 0, 3)
+    for l in range(1, levels + 1):
+        altitudes.append((max_height * l) / levels)
 
-    rospy.loginfo("Landing")
+    while not rospy.is_shutdown():
+        if c.current_state.mode == "OFFBOARD":
+            c.log_info("OFFBOARD enabled")
+            break
+
+        # Before entering OFFBOARD mode, you must have already started streaming setpoints
+        c.goto_xyz_rpy(0, 0, 0, 0, 0, 0, 1, False, False)
+
+    c.log_info(f"Takeoff: {altitudes[0]}m")
+    c.takeoff(altitudes[0])
+
+    # Go to center of circle
+    c.goto_xyz_rpy(radius, radius, altitudes[0], 0, 0, 0)
+
+    # Fly circle pattern
+    for altitude in altitudes:
+        fly_circle(c, radius, repetitions, altitude) 
+
+    # Go back home
+    c.goto_xyz_rpy(0, 0, max_height/levels, 0, 0, 0)
+
+    c.log_info("Landing")
     c.land()
 
 
 if __name__ == "__main__":
-    simple_demo()
+    move()

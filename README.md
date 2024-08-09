@@ -116,7 +116,7 @@ $ sudo pip3 install mavproxy
 $ sudo apt remove modemmanager
 ```
 
-Run MAVProxy, setting the port to connect to `/dev/ttyserial0` and the baud rate to match the flight controller (57600):
+Run MAVProxy, setting the port to connect to `/dev/serial0` and the baud rate to match the flight controller (57600):
 
 ```
 $ sudo mavproxy.py --master=/dev/serial0 --baudrate 921600
@@ -611,6 +611,16 @@ Restart the RPi.
 Now upon boot, you only need to set up environment variables for the publishing computer. This is ok because you will 
 most likely be running other programs on your publishing computer in the future. Creating a system service could 
 interfere with this. 
+
+# UPDATED RPI DOC
+
+TODO: integrate into old documentation
+
+This repository is supported on ROS Noetic. If you haven't already, please install [Ubuntu MATE 22.04](https://releases.ubuntu-mate.org/22.04/arm64/) for the RPi4 (arm64) using the [Raspberry Pi Imager](https://www.raspberrypi.com/software/). 
+
+Select the `Log in automatically` option upon first boot.
+
+........
 
 ## Development Environment
 

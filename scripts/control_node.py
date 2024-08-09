@@ -7,6 +7,8 @@ from geometry_msgs.msg import Pose, PoseStamped, Twist, Quaternion
 from mavros_msgs.srv import CommandBool, CommandBoolRequest, SetMode, SetModeRequest
 
 
+from mavros_msgs.srv import CommandLong
+
 class MavrospyController:
     """
     Controller class to help interface with mavros
@@ -44,7 +46,7 @@ class MavrospyController:
         self.lon = -764857648  # Hopper Hall -764857648
         self.alt = 36810  # Hopper Hall 36810
 
-        self.log_info("MavController Initiated")
+        self.log_info("MavrospyController Initiated")
 
     def state_callback(self, data):
         self.current_state = data
@@ -73,28 +75,31 @@ class MavrospyController:
         except rospy.ROSException as e:
             self.log_error(e)
 
-    from mavros_msgs.srv import CommandLong
+    def set_gps_global_origin():
+        rospy.init_node('set_gps_global_origin')
 
-    def set_gps_global_origin(self):
-        # rospy.wait_for_service('/mavros/cmd/command')
+        lat = 47.397742  # Set your desired latitude
+        lon = 8.545594   # Set your desired longitude
+        alt = 500.0      # Set your desired altitude
+
+        # Call the MAVROS service to send the command
+        rospy.wait_for_service('/mavros/cmd/command')
         try:
-            command_service = rospy.ServiceProxy('/mavros/cmd/command', CommandLong)
-            response = command_service(
-                broadcast=False,
-                command=48,    # MAV_CMD_SET_GPS_GLOBAL_ORIGIN
-                confirmation=0,
-                param1=0,      # Target system ID, 0 for the current system
-                param2=0,
-                param3=0,
-                param4=0,
-                param5=self.lat,
-                param6=self.long,
-                param7=self.alt
+            set_origin = rospy.ServiceProxy('/mavros/cmd/command', CommandLong)
+            resp = set_origin(
+                0,  # target system
+                0,  # target component
+                48, # MAV_CMD_SET_GPS_GLOBAL_ORIGIN
+                0,  # confirmation
+                0,  # param1: Use current location (0: use specified, 1: use current)
+                lat * 1e7,  # param2: Latitude
+                lon * 1e7,  # param3: Longitude
+                alt * 1e3,  # param4: Altitude (in mm)
+                0, 0, 0     # unused parameters
             )
-            return response.success
+            rospy.loginfo(f"Command result: {resp}")
         except rospy.ServiceException as e:
-            rospy.logerr("Service call failed: %s" % e)
-            return False
+            rospy.logerr(f"Service call failed: {e}")
 
     def arm(self, arm_status, timeout=5):
         """
@@ -135,7 +140,7 @@ class MavrospyController:
         except rospy.ROSException as e:
             self.log_error(e)
 
-    def goto_xyz_rpy(self, x, y, z, roll, pitch, yaw, timeout=30, loop=True, checkMode=True):
+    def goto_xyz_rpy(self, x, y, z, roll, pitch, yaw, timeout=30, isClose=True, checkMode=True):
         """
         Sets the given pose as a next set point for given timeout (seconds).
         """
@@ -173,7 +178,7 @@ class MavrospyController:
 
             return abs(target - current) < tolerance
 
-        if loop:
+        if isClose:
             for i in range(timeout * self.freq):
                 self.goto(pose)
                 self.pause()
@@ -188,8 +193,9 @@ class MavrospyController:
                     self.log_info("Reached target position")
                     break
         else:
-            self.goto(pose)  # go to given pose
-            self.pause()
+            for i in range(int(timeout * self.freq)):
+                self.goto(pose)
+                self.pause()
 
     def takeoff(self, height, timeout=30):
         """

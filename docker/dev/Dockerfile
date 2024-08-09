@@ -74,12 +74,9 @@ RUN echo "source /opt/ros/noetic/setup.bash" >> /home/dev/.bashrc && \
     echo "export ROS_PACKAGE_PATH=/home/dev/catkin_ws/src:/opt/ros/noetic/share:/home/dev/PX4-Autopilot:/home/dev/PX4-Autopilot/Tools/simulation/gazebo-classic/sitl_gazebo-classic" >> /home/dev/.bashrc && \
     echo "export ROS_IP=$(hostname -I | awk '{print $1}')" >> /home/dev/.bashrc
 
-# Copy RViz configuration
-RUN cp /home/dev/catkin_ws/src/mavrospy/rviz/.....
-
 # Set WORKDIR to src directory and clean package list
 WORKDIR /home/dev/catkin_ws/src
-RUN rm -rf /var/lib/apt/lists/*
+RUN sudo rm -rf /var/lib/apt/lists/*
 
 # Set up entrypoint
 ENTRYPOINT ["/bin/bash"]
