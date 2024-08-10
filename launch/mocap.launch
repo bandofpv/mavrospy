@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <launch>
-	<arg name="fcu_url" />
+	<arg name="fcu_url" default="/dev/serial0:921600" />
 
 	<!-- Include the MAVROS px4 node -->
 	<include file="$(find mavros)/launch/px4.launch">

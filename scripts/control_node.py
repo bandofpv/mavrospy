@@ -16,7 +16,7 @@ class MavrospyController:
 
     def __init__(self, send_rate):
         # initialize our control node
-        rospy.init_node("mavros_node")
+        rospy.init_node("mavrospy_node")
 
         # create subscribers
         rospy.Subscriber("mavros/state", State, self.state_callback)
@@ -76,8 +76,6 @@ class MavrospyController:
             self.log_error(e)
 
     def set_gps_global_origin():
-        rospy.init_node('set_gps_global_origin')
-
         lat = 47.397742  # Set your desired latitude
         lon = 8.545594   # Set your desired longitude
         alt = 500.0      # Set your desired altitude

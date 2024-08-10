@@ -6,17 +6,21 @@ from control_node import MavrospyController
 
 def fly_square(c, width, repetitions, altitude):
     """
-    Fly in a square pattern facing only in the forward direction
+    Fly in a square pattern facing in direction of motion
     """
     for r in range(repetitions):
         c.log_info("Waypoint 1")
-        c.goto_xyz_rpy(width, 0.0, altitude, 0, 0, 0)
+        c.goto_xyz_rpy(0.0, 0.0, altitude, 0, 0, -1 * c.pi_2)
+        c.goto_xyz_rpy(width, 0.0, altitude, 0, 0, -1 * c.pi_2)
         c.log_info("Waypoint 2")
+        c.goto_xyz_rpy(width, 0.0, altitude, 0, 0, 0)
         c.goto_xyz_rpy(width, width, altitude, 0, 0, 0)
         c.log_info("Waypoint 3")
-        c.goto_xyz_rpy(0.0, width, altitude, 0, 0, 0)
+        c.goto_xyz_rpy(width, width, altitude, 0, 0, c.pi_2)
+        c.goto_xyz_rpy(0.0, width, altitude, 0, 0, c.pi_2)
         c.log_info("Waypoint 4")
-        c.goto_xyz_rpy(0.0, 0.0, altitude, 0, 0, 0)
+        c.goto_xyz_rpy(0.0, width, altitude, 0, 0, 2 * c.pi_2)
+        c.goto_xyz_rpy(0.0, 0.0, altitude, 0, 0, 2 * c.pi_2)
 
 
 def move():

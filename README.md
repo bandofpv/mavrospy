@@ -1,26 +1,14 @@
 # mavrospy
 ROS node to interact with [MAVROS](https://wiki.ros.org/mavros) for basic UAV control.
 
-This current repo is supported on a PX4 flight controller with a RPi4 companion computer running Ubuntu 20.04 MATE with 
-ROS Noetic. 
+This current repo is supported on a PX4 flight controller with a RPi4 companion computer running Ubuntu 22.04 MATE with ROS Noetic.
 
-Documentation for motion capture utilizes the 
-[Qualisys Track Manager]("https://www.qualisys.com/software/qualisys-track-manager/").  
+Documentation for motion capture utilizes the [Qualisys Track Manager]("https://www.qualisys.com/software/qualisys-track-manager/").
 
-## Usage:
+### Setup:
+This repository is supported on ROS Noetic. If you haven't already, please install [Ubuntu MATE 22.04](https://releases.ubuntu-mate.org/22.04/arm64/) for the RPi4 (arm64) using the [Raspberry Pi Imager](https://www.raspberrypi.com/software/). 
 
-### TODO: TALK ABOUT HOW TO USE CODE
-
-## Setup:
-
-This repository is supported on ROS Noetic. If you haven't already, please install 
-[Ubuntu MATE 20.04](https://releases.ubuntu-mate.org/20.04/arm64/) for the RPi4 (arm64) using the 
-[Raspberry Pi Imager](https://www.raspberrypi.com/software/). 
-
-Select the `Log in automatically` option upon first boot. 
-
-**Note:** If prompted to upgrade to a newer version of Ubuntu, selected `Don't Upgrade`. ROS Noetic is primarily 
-targeted at the Ubuntu 20.04 (Focal) release.
+Select the `Log in automatically` option upon first boot.
 
 ### Wiring
 
@@ -64,9 +52,42 @@ Assuming you have installed the latest PX4
 
 ```
    MAV_1_CONFIG = TELEM2
-   UXRCE_DDS_CFG = 0 
+   UXRCE_DDS_CFG = 0
    SER_TEL2_BAUD = 921600
 ```
+
+### Setting up SSH
+
+SSH allows us to remotely issue commands to the RPi over Wi-Fi.
+
+Install the `openssh-server` package on your RPi:
+
+```
+$ sudo apt update
+$ sudo apt install openssh-server
+```
+
+The SSH service will start automatically. We can verify this by entering:
+
+```
+$ sudo systemctl status ssh
+```
+
+You should see `Active: active (running)` somewhere in the status report. **CTRL+C** to exit.
+
+On your publishing computer, SSH to your RPi. Make sure you change `username` to your RPi's username and `ip_address` to your RPi's IP address:
+
+```
+$ ssh username@ip_address
+```
+
+Remember, you can always check your IP address via:
+
+```
+$ ifconfig
+```
+
+We can now issue commands to our RPi via SSH rather than having it hooked up to a monitor with a mouse and keyboard.
 
 ### Enable UART Communication
 
@@ -83,7 +104,7 @@ enable_uart=1
 dtoverlay=disable-bt
 ```
 
-Save and exit the file. 
+Save and exit the file.
 
 Run this command to add your user to the `dialout` group:
 
@@ -91,7 +112,7 @@ Run this command to add your user to the `dialout` group:
 $ sudo adduser ${USER} dialout
 ```
 
-Restart the RPi. 
+Restart the RPi.
 
 You can check that the serial port is available by issuing this command: 
 
@@ -125,135 +146,80 @@ $ sudo mavproxy.py --master=/dev/serial0 --baudrate 921600
 MAVProxy on the RPi should now connect to the flight controller via its RX/TX pins. You should be able to see this in the 
 RPi terminal. **CTRL+C** to exit.
 
-### Install ROS Noetic
+### Install Docker
 
-[ROS](http://www.ros.org/) is a general purpose robotics library that can be used with PX4 for drone application development.
+Installing [Docker](https://www.docker.com/) on Ubuntu MATE is very easy and will allow us to build the ROS environment onto the RPi in just a few steps.
 
-These instructions are a simplified version of the [official installation guide](https://wiki.ros.org/noetic/Installation/Ubuntu).
+This is a summarized version of the offical [installation insructions](https://docs.docker.com/engine/install/ubuntu/#installation-methods).
 
-Set up your computer to accept software from packages.ros.org: 
-
-```
-$ sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
-```
-
-Set up your keys: 
+Setup Docker's `apt` repsitory:
 
 ```
-$ sudo apt install curl 
-$ curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
-```
+# Add Docker's official GPG key:
+$ sudo apt update
+$ sudo apt install ca-certificates curl
+$ sudo install -m 0755 -d /etc/apt/keyrings
+$ sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+$ sudo chmod a+r /etc/apt/keyrings/docker.asc
 
-Make sure your Debian package index is up-to-date:
-
-```
+$ echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 $ sudo apt update
 ```
 
-Install ROS-Base (Bare Bones):
+Install the Docker packages:
 
 ```
-$ sudo apt install ros-noetic-ros-base
+$ sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 ```
 
-You must source this script in every bash terminal you use ROS in.
+Create the `docker` group if not already created:
 
 ```
-$ source /opt/ros/noetic/setup.bash
+$ sudo groupadd docker
 ```
 
-It can be convenient to automatically source this script every time a new shell is launched. These commands will do that 
-for you:
+Add your user to the `docker` group:
 
 ```
-$ echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
-$ source ~/.bashrc
+$ sudo usermod -aG docker $USER
 ```
 
-### Test ROS Noetic
+Log out and log back in so that your group membership is re-evaluated.
 
-You can test ROS was installed properly by verifying its version:
-
-```
-$ rosversion -d
-```
-
-It should return `noetic`.
-
-### Install MAVROS
-
-[MAVROS](https://wiki.ros.org/mavros) is a ROS 1 package that enables MAVLink extendable communication between computers 
-running ROS 1 for any MAVLink enabled autopilot, ground station, or peripheral. MAVROS is the "official" supported 
-bridge between ROS 1 and the MAVLink protocol.
-
-These instructions are a simplified version of the 
-[official installation guide](https://github.com/mavlink/mavros/blob/master/mavros/README.md#installation)
-
-Enter the following command to install MAVROS:
+We can verify our Docker installation via:
 
 ```
-$ sudo apt install ros-noetic-mavros ros-noetic-mavros-extras ros-noetic-mavros-msgs
+$ docker run hello-world
 ```
 
-Then install [GeographicLib](https://geographiclib.sourceforge.io/) datasets by running the 
-`install_geographiclib_datasets.sh` script:
+### Build MAVROSPY Docker image
+
+Now that Docker is installed properlly, we can build our Docker image and run it in a Docker container.
+
+Clone the `mavrospy` repository:
 
 ```
-$ wget https://raw.githubusercontent.com/mavlink/mavros/master/mavros/scripts/install_geographiclib_datasets.sh
-$ sudo bash ./install_geographiclib_datasets.sh
-```
-
-### Test MAVROS
-
-You can test MAVROS is working correctly by issuing the following command:
-
-```
-$ roslaunch mavros px4.launch fcu_url:=/dev/serial0:921600
-```
-
-This will launch the mavros node and connect to your flight controller. **CTRL+C** to exit.
-
-### Install MAVROSPY
-
-Create a [catkin workspace](https://wiki.ros.org/catkin/workspaces): 
-
-```
-$ mkdir -p ~/catkin_ws/src
-```
-
-Clone `mavrospy` in your catkin workspace and build with `catkin_make`: 
-
-```
-$ sudo apt install git
-$ cd ~/catkin_ws/src
+$ cd ~
 $ git clone https://github.com/bandofpv/mavrospy.git
-$ cd ..
-$ catkin_make
 ```
 
-Similar with ROS, you must source this script in every bash terminal you use MAVROSPY in.
+Build via the `run_docker.sh` script:
 
 ```
-$ source ~/catkin_ws/devel/setup.bash
+$ cd ~/mavrospy/docker/rpi
+$ bash run_docker.sh
 ```
 
-It can be convenient to automatically source this script every time a new shell is launched. These commands will do that 
-for you:
+The script will automatically start building the docker image and run it in a container.
 
-```
-$ echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc
-$ source ~/.bashrc
-```
+### Outdoor Test
 
-### Test MAVROSPY
+With the MAVROSPY environment setup on your RPi, we can run a simple test script.
 
-You can test MAVROSPY is working correctly by issuing the following command: 
-
-```
-$ roslaunch mavrospy control_test.launch fcu_url:=/dev/serial0:921600
-```
-
-### TODO: write what to expect... note will make breaks after adding mode check
+# TODO: how to auto run docker... Create bash script to automate this feature
 
 ### Start ROS Nodes at Boot
 
@@ -383,178 +349,58 @@ This assumes that you have already set up your Qualisys motion capture system an
 QTM is only supported via Windows, so we will have to use another computer utilizing a Linux distro o act as our ROS 
 pose publisher. The best practice is to connect these two machines via Ethernet to avoid latency and packet loss. 
 
-### Install ROS Noetic
-
-We need to install ROS on our publishing computer to be able to publish ROS pose topics to your UAV. 
-
-Please note that you must use [Ubuntu 20.04]("https://releases.ubuntu.com/focal/") as that is the supported Ubuntu OS 
-supported on ROS Noetic.
-
-Set up your computer to accept software from packages.ros.org:
-
-```
-$ sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
-```
-
-Set up your keys:
-
-```
-$ sudo apt install curl 
-$ curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
-```
-
-Make sure your Debian package index is up-to-date:
-
-```
-$ sudo apt update
-```
-
-Install Desktop-Full:
-
-```
-$ sudo apt install ros-noetic-desktop-full
-```
-
-You must source this script in every bash terminal you use ROS in.
-
-```
-$ source /opt/ros/noetic/setup.bash
-```
-
-It can be convenient to automatically source this script every time a new shell is launched. These commands will do that
-for you:
-
-```
-$ echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
-$ source ~/.bashrc
-```
-
-### Install Motion Capture ROS Driver
-
-To integrate QTM with ROS, we can use this [ROS Driver]("https://github.com/KTH-SML/motion_capture_system/tree/master"). 
-
-Create a [catkin workspace](https://wiki.ros.org/catkin/workspaces) in your publishing computer:
-
-```
-$ mkdir -p ~/catkin_ws/src
-```
-
-Clone the `motion_capture_system` in your catkin workspace and build with `catkin_make`:
-
-```
-$ sudo apt install git
-$ cd ~/catkin_ws/src
-$ git clone https://github.com/KTH-SML/motion_capture_system.git
-$ cd ..
-$ catkin_make
-```
-
-### Setting up SSH
-
-SSH allows us to remotely issue commands to the RPi over Wi-Fi.
-
-Install the `openssh-server` package on your RPi: 
-
-```
-$ sudo apt install openssh-server
-```
-
-The SSH service will start automatically. We can verify this by entering:
-
-```
-$ sudo systemctl status ssh
-```
-
-You should see `Active: active (running)` somewhere in the status report. **CTRL+C** to exit.
-
-On your publishing computer, SSH to your RPi. Make sure you change `username` to your RPi's username and `ip_address` to 
-your RPi's IP address: 
-
-```
-$ ssh username@ip_address
-```
-
-Remember, you can always check your IP address via: 
-
-```
-$ ifconfig
-```
-
-We can now issue commands to our RPi via SSH rather than having it hooked up to a monitor with a mouse and keyboard. 
-
 # TODO Add instructions for flight controller parameters!!!
 
 ### Publish Motion Capture Pose Topic
 
-In order to publish ROS pose topics from our computer to the RPi, we must establish a 
-[ROS Master]("https://wiki.ros.org/Master"). In our case, we will choose the RPi as the master. 
+In order to publish ROS pose topics from our computer to the RPi, we must establish a [ROS Master]("https://wiki.ros.org/Master"). In our case, we will choose the RPi as the master.
 
-On your publishing computer, export the following environment variables. Make sure to replace `pub_ip_address` with the 
-IP address of your publishing computer and `master_ip_address` with the IP address of the RPi: 
+On your publishing computer, export the `ROS_MASTER_URI` environment variable. Make sure to replace `master_ip_address` with the IP address of the RPi:
 
 ```
-$ export ROS_IP=pub_ip_address
 $ export ROS_MASTER_URI=http://master_ip_address:11311
 ```
 
-On your RPi, export the following environment variables. Make sure to replace both instances of `master_ip_address` with 
-the IP address of your RPi:
-
-```
-$ export ROS_IP=master_ip_address
-$ export ROS_MASTER_URI=http://master_ip_address:11311
-```
-
-For the pose topic to be understood properly between computers, it's important that both machines are in sync. On both 
-systems, run: 
+For the pose topic to be understood properly between computers, it's important that both machines are in sync. On both systems, run:
 
 ```
 $ timedatectl
 ```
 
-In the output, you should see: 
+In the output, you should see:
 
 ```
 System clock synchronized: yes
 NTP service: active
 ```
 
-If the output indicates that the NTP service isn't active, turn it on via: 
+If the output indicates that the NTP service isn't active, turn it on via:
 
 ```
 $ sudo timedatectl set-ntp on
 ```
 
-After this, run `timedatectl` again to confirm the network time status. 
+After this, run `timedatectl` again to confirm the network time status.
 
-If the output indicates that the NTP service is active but not synchronized, it is possible that your firewall is 
-blocking access to an NTP server. We can check if this is the case via: 
-
-```
-
-```
-
-# TODO: what does the timeout output look like?
-
-With both systems in sync, we can start publishing pose topics. 
+With both systems in sync, we can start publishing pose topics.
 
 First, kill any pre-existing ROS nodes via:
 
 ```
-$ rosnode kill -a
+$ rosnode kill --all
 ```
 
-# TODO: check this command ^^^^
+### DO we need this if u don't have ros autstart script? ^^^^
 
-Now start publishing. On your publishing computer, enter: 
+Now start publishing. On your publishing computer, enter:
 
 ```
-$ roslaunch mocap_qualisys qualisys.launch  server_address:=qtm_server_address
+$ roslaunch mocap_qualisys qualisys.launchserver_address:=qtm_server_address
 ```
 
 Where `qtm_server_address` is the IP address to your QTM server.
 
-To verify your pose topics are being published, run: 
+To verify your pose topics are being published, run:
 
 ```
 $ rostopic echo /qualisys/rigid_body_name/pose
@@ -562,13 +408,13 @@ $ rostopic echo /qualisys/rigid_body_name/pose
 
 Where `rigid_body_name` is the name of your rigid body in QTM.
 
-You can now start our motion capture control node on our RPi via: 
+You can now start our motion capture control node on our RPi via:
 
 ```
-$ roslaunch mavrospy mocap.launch fcu_url:=/dev/serial0:921600
+$ roslaunch mavrospy mocap.launch
 ```
 
-We can verify that our RPi is receiving our pose topic via: 
+We can verify that our RPi is receiving our pose topic via:
 
 ```
 $ rostopic echo /mavros/vision_pose/pose
@@ -612,16 +458,6 @@ Now upon boot, you only need to set up environment variables for the publishing 
 most likely be running other programs on your publishing computer in the future. Creating a system service could 
 interfere with this. 
 
-# UPDATED RPI DOC
-
-TODO: integrate into old documentation
-
-This repository is supported on ROS Noetic. If you haven't already, please install [Ubuntu MATE 22.04](https://releases.ubuntu-mate.org/22.04/arm64/) for the RPi4 (arm64) using the [Raspberry Pi Imager](https://www.raspberrypi.com/software/). 
-
-Select the `Log in automatically` option upon first boot.
-
-........
-
 ## Development Environment
 
 Setting up a development environment on your desktop machine is helpful for running simulations before testing it on your live UAV. We can easily set up our environment via Docker.
@@ -633,7 +469,7 @@ First, make sure you installed [Docker Engine](https://docs.docker.com/engine/in
 We can verify our Docker installation via:
 
 ```
-docker run hello-world
+$ docker run hello-world
 ```
 
 ### NVIDIA GPU Acceleration
@@ -691,9 +527,7 @@ Verify the installation by running a sample CUDA container:
 $ sudo docker run --rm --runtime=nvidia --gpus all ubuntu nvidia-smi
 ```
 
-Depending on your PC, you may have an internal graphics card.
-
-To use your NVIDIA graphics card, enter this command:
+Depending on your PC, you may have an internal graphics card. To use your NVIDIA graphics card, enter this command:
 
 ```
 $ sudo prime-select nvidia
@@ -708,22 +542,18 @@ We can now build our Docker image via the following commands:
 ```
 $ cd ~
 $ git clone https://github.com/bandofpv/mavrospy.git
-$ cd ~/mavrospy/docker
-$ docker build -t mavrospy-dev .
-```
-
-### Run Docker Container
-
-After building, we can open up our image in a Docker container:
-
-```
+$ cd ~/mavrospy/docker/dev
 $ bash run_docker.sh
 ```
 
-After successfully opening the docker container, launch a simulation:
+This script will automatically build the Docker image and open it in a Docker container.
+
+### Launch Gazebo Classic Simulator
+
+We can now launch a simulation:
 
 ```
-$ roslaunch mavrospy sim_square.launch fcu_url:=udp://:14540@127.0.0.1:14557
+$ roslaunch mavrospy gazebo_sim.launch
 ```
 
 Gazebo should open up and display a quadcopter model.
@@ -747,3 +577,29 @@ Go back to the Gazebo window and watch drone fly!
 The system will automatically clean up after the drone lands.
 
 Enter `exit` to close the Docker container.
+
+Note: you can test out the movement patterns in the [scripts](https://github.com/bandofpv/mavrospy/tree/main/scripts) directory. Simply specify the `movement` argument.
+
+Ex: `$ roslaunch mavrospy gazebo_sim.launch movement:=circle`
+
+### Visualization with RViz
+
+We can also visualize our simulation and motion capature poses with [RViz](http://wiki.ros.org/rviz)
+
+After starting a simulation or motion caputure publisher, we can launch RViz.
+
+Open a new termial and attach to the development environment container:
+
+```
+$ bash ~/mavrospy/docker/dev/run_docker.sh
+```
+
+Note: if you are using motion capture, you will have to export the `ROS_MASTER_URI` environment variable again
+
+Launch RViz:
+
+```
+$ roslaunch mavrospy rviz.launch
+```
+
+ROS will automatically detect whether its a simulation or motion capture and begin plotting the drone's path.

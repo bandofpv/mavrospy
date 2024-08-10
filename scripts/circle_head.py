@@ -7,7 +7,7 @@ from control_node import MavrospyController
 
 def fly_circle(c, radius, repetitions, altitude, resolution=180):
     """
-    Fly in a circle pattern facing only in forward direction
+    Fly in a circle pattern facing direction of motion
     """
     for r in range(repetitions):
         # Generate circle points
@@ -15,6 +15,7 @@ def fly_circle(c, radius, repetitions, altitude, resolution=180):
             theta = 2 * math.pi * i / resolution  # angle from center to perimeter
             x = radius * math.cos(theta)  # calculate x position
             y = radius * math.sin(theta)  # calculate y position
+            yaw = math.atan2(y, x)  # calculate yaw to face forward along the path
 
             # Account for center offset
             x += radius
@@ -22,9 +23,9 @@ def fly_circle(c, radius, repetitions, altitude, resolution=180):
 
             # If first or last position, wait until it reaches/isClose goal position
             if i == 1 or i == resolution-1:
-                c.goto_xyz_rpy(x, y, altitude, 0, 0, 0)
+                c.goto_xyz_rpy(x, y, altitude, 0, 0, yaw)
             else:  # just send command regardless of current position
-                c.goto_xyz_rpy(x, y, altitude, 0, 0, 0, 1/20, isClose=False)
+                c.goto_xyz_rpy(x, y, altitude, 0, 0, yaw, 1/20, isClose=False)
 
 def move():
     """
