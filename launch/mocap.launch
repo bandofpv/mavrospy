@@ -10,6 +10,7 @@
     <!-- Relay Qualisys pose topic to MAVROS vision_pose topic -->
 	<node pkg="topic_tools" type="relay" name="relay" output="screen" args="/qualisys/Bernas_Quad/pose /mavros/vision_pose/pose"/>
 
+	<node pkg="mavrospy" type="test.py" name="mocap_to_tf" required="true" output="screen"/>
 	<node pkg="mavrospy" type="mocap.py" name="mavrospy" required="true" output="screen"/>
 
 </launch>
