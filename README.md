@@ -395,7 +395,7 @@ $ rosnode kill --all
 Now start publishing. On your publishing computer, enter:
 
 ```
-$ roslaunch mocap_qualisys qualisys.launchserver_address:=qtm_server_address
+$ roslaunch mocap_qualisys qualisys.launch server_address:=qtm_server_address
 ```
 
 Where `qtm_server_address` is the IP address to your QTM server.

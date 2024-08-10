@@ -75,7 +75,7 @@ RUN echo "source /opt/ros/noetic/setup.bash" >> /home/dev/.bashrc && \
     echo "export ROS_IP=$(hostname -I | awk '{print $1}')" >> /home/dev/.bashrc
 
 # Set WORKDIR to src directory and clean package list
-WORKDIR /home/dev/catkin_ws/src
+WORKDIR /home/dev/catkin_ws/src/mavrospy
 RUN sudo rm -rf /var/lib/apt/lists/*
 
 # Set up entrypoint

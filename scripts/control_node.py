@@ -6,7 +6,7 @@ from mavros_msgs.msg import State, ExtendedState
 from geometry_msgs.msg import Pose, PoseStamped, Twist, Quaternion
 from mavros_msgs.srv import CommandBool, CommandBoolRequest, SetMode, SetModeRequest
 
-
+from geographic_msgs.msg import GeoPoint, GeoPointStamped
 from mavros_msgs.srv import CommandLong
 
 class MavrospyController:
@@ -25,7 +25,7 @@ class MavrospyController:
 
         # create publishers
         self.cmd_pos_pub = rospy.Publisher("/mavros/setpoint_position/local", PoseStamped, queue_size=1)
-        self.cmd_vel_pub = rospy.Publisher("/mavros/setpoint_velocity/cmd_vel_unstamped", Twist, queue_size=1)
+        self.gp_origin_pub = rospy.Publisher("/mavros/global_position/set_gp_origin", GeoPointStamped, queue_size=1)
 
         # create services
         self.mode_service = rospy.ServiceProxy('/mavros/set_mode', SetMode)
@@ -75,29 +75,19 @@ class MavrospyController:
         except rospy.ROSException as e:
             self.log_error(e)
 
-    def set_gps_global_origin():
-        lat = 47.397742  # Set your desired latitude
-        lon = 8.545594   # Set your desired longitude
-        alt = 500.0      # Set your desired altitude
+    def set_ekf_origin(self, origin: GeoPoint) -> None:
+        """Set the EKF origin.
 
-        # Call the MAVROS service to send the command
-        rospy.wait_for_service('/mavros/cmd/command')
-        try:
-            set_origin = rospy.ServiceProxy('/mavros/cmd/command', CommandLong)
-            resp = set_origin(
-                0,  # target system
-                0,  # target component
-                48, # MAV_CMD_SET_GPS_GLOBAL_ORIGIN
-                0,  # confirmation
-                0,  # param1: Use current location (0: use specified, 1: use current)
-                lat * 1e7,  # param2: Latitude
-                lon * 1e7,  # param3: Longitude
-                alt * 1e3,  # param4: Altitude (in mm)
-                0, 0, 0     # unused parameters
-            )
-            rospy.loginfo(f"Command result: {resp}")
-        except rospy.ServiceException as e:
-            rospy.logerr(f"Service call failed: {e}")
+        This is required for navigation on a vehicle with one of the provided localizers.
+
+        Args:
+            origin: The EKF origin to set.
+        """
+        origin_stamped = GeoPointStamped()
+        origin_stamped.header.stamp = rospy.get_rostime()
+        origin_stamped.position = origin
+        self.gp_origin_pub.publish(origin_stamped)
+
 
     def arm(self, arm_status, timeout=5):
         """

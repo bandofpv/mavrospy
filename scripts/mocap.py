@@ -4,6 +4,7 @@ import tf
 import rospy
 from control_node import MavrospyController
 
+from geographic_msgs.msg import GeoPoint, GeoPointStamped
 
 def simple_demo():
     """
@@ -19,6 +20,8 @@ def simple_demo():
         if c.current_state.mode == "OFFBOARD":
             c.log_info("OFFBOARD enabled")
             break
+
+        c.set_ekf_origin(GeoPoint(latitude=44.65870, longitude=-124.0655, altitude=0.0))
 
         c.goto_xyz_rpy(0, 0, 0, 0, 0, 0, 1, False, False)
 
