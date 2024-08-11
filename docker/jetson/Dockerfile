@@ -15,36 +15,36 @@ RUN apt-get update && apt-get install -y \
     nano \
     openssh-client
 
-# Set up rpi user
-RUN useradd -m rpi && echo "rpi:rpi" | chpasswd && adduser rpi sudo
+# Set up jetson user
+RUN useradd -m jetson && echo "jetson:jetson" | chpasswd && adduser jetson sudo
 
 # Configure sudoers to not require a password for sudo
-RUN echo "rpi ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+RUN echo "jetson ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 # Install MAVROS
 RUN sudo apt-get install -y ros-noetic-mavros ros-noetic-mavros-extras ros-noetic-mavros-msgs && \
     wget https://raw.githubusercontent.com/mavlink/mavros/master/mavros/scripts/install_geographiclib_datasets.sh && \
     sudo bash ./install_geographiclib_datasets.sh
 
-# Switch to rpi user
-USER rpi
+# Switch to jetson user
+USER jetson
 
 # Install pymavlink
 RUN pip3 install pymavlink
 
 # Set up SSH for cloning the repository
-RUN mkdir -p /home/rpi/.ssh && \
-    ssh-keyscan github.com >> /home/rpi/.ssh/known_hosts
+RUN mkdir -p /home/jetson/.ssh && \
+    ssh-keyscan github.com >> /home/jetson/.ssh/known_hosts
 
 # Set up ROS workspace
-WORKDIR /home/rpi/catkin_ws/src
+WORKDIR /home/jetson/catkin_ws/src
 RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && catkin_init_workspace"
 
 # Clone MAVROSPY repo
 RUN git clone https://github.com/bandofpv/mavrospy.git
 
 # Install ROS package dependencies
-WORKDIR /home/rpi/catkin_ws
+WORKDIR /home/jetson/catkin_ws
 RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && rosdep update" && \
     /bin/bash -c "source /opt/ros/noetic/setup.bash && rosdep install --from-paths src --ignore-src -r -y"
 
@@ -52,14 +52,14 @@ RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && rosdep update" && \
 RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && catkin_make"
 
 # Add start up commands to .bashrc
-RUN echo "source /opt/ros/noetic/setup.bash" >> /home/rpi/.bashrc && \
-    echo "source /home/rpi/catkin_ws/devel/setup.bash" >> /home/rpi/.bashrc && \
-    echo "sudo chown rpi /dev/serial0" >> /home/rpi/.bashrc && \
-    echo "export ROS_IP=$(hostname -I | awk '{print $1}')" >> /home/rpi/.bashrc && \
-    echo "export ROS_MASTER_URI=http://$(hostname -I | awk '{print $1}'):11311" >> /home/rpi/.bashrc
+RUN echo "source /opt/ros/noetic/setup.bash" >> /home/jetson/.bashrc && \
+    echo "source /home/jetson/catkin_ws/devel/setup.bash" >> /home/jetson/.bashrc && \
+    echo "sudo chown jetson /dev/serial0" >> /home/jetson/.bashrc && \
+    echo "export ROS_IP=$(hostname -I | awk '{print $1}')" >> /home/jetson/.bashrc && \
+    echo "export ROS_MASTER_URI=http://$(hostname -I | awk '{print $1}'):11311" >> /home/jetson/.bashrc
 
 # Start in MAVROSPY direcotry
-WORKDIR /home/rpi/catkin_ws/src/mavrospy
+WORKDIR /home/jetson/catkin_ws/src/mavrospy
 
 # Clean up
 RUN sudo rm -rf /var/lib/apt/lists/* && \

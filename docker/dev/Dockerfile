@@ -5,7 +5,7 @@ FROM ros:noetic
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install dependencies
-RUN apt-get update && apt install -y \
+RUN apt-get update && apt-get install -y \
     git \
     ca-certificates \
     gnupg \
@@ -24,15 +24,15 @@ RUN useradd -m dev && echo "dev:dev" | chpasswd && adduser dev sudo
 RUN echo "dev ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 # Install Gazebo ROS Packages
-RUN sudo apt install -y \
+RUN sudo apt-get install -y \
     ros-noetic-gazebo-ros-pkgs \
     ros-noetic-gazebo-ros-control
 
 # Install RViz
-RUN sudo apt install -y ros-noetic-rviz
+RUN sudo apt-get install -y ros-noetic-rviz
 
 # Install MAVROS
-RUN sudo apt install -y \
+RUN sudo apt-get install -y \
     ros-noetic-mavros \
     ros-noetic-mavros-extras \
     ros-noetic-mavros-msgs && \
@@ -76,7 +76,10 @@ RUN echo "source /opt/ros/noetic/setup.bash" >> /home/dev/.bashrc && \
 
 # Set WORKDIR to src directory and clean package list
 WORKDIR /home/dev/catkin_ws/src/mavrospy
-RUN sudo rm -rf /var/lib/apt/lists/*
+
+# Clean up
+RUN sudo rm -rf /var/lib/apt/lists/*  && \
+    sudo apt-get clean
 
 # Set up entrypoint
 ENTRYPOINT ["/bin/bash"]
