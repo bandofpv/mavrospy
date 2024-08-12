@@ -18,7 +18,6 @@ RUN apt-get update && apt-get install -y \
     python3-pip \
     vim \
     nano \
-    openssh-client \
     build-essential \
     cmake \
     python3-pytest-cov
@@ -84,10 +83,6 @@ RUN colcon build --symlink-install
 
 # Install pymavlink
 RUN pip3 install pymavlink
-
-# Set up SSH for cloning the repository
-RUN mkdir -p /home/bridge/.ssh && \
-    ssh-keyscan github.com >> /home/bridge/.ssh/known_hosts
 
 # Set up ROS workspace
 WORKDIR /home/bridge/catkin_ws/src

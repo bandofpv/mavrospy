@@ -12,8 +12,7 @@ RUN apt-get update && apt-get install -y \
     net-tools \
     python3-pip \
     vim \
-    nano \
-    openssh-client
+    nano
 
 # Set up rpi user
 RUN useradd -m rpi && echo "rpi:rpi" | chpasswd && adduser rpi sudo
@@ -31,10 +30,6 @@ USER rpi
 
 # Install pymavlink
 RUN pip3 install pymavlink
-
-# Set up SSH for cloning the repository
-RUN mkdir -p /home/rpi/.ssh && \
-    ssh-keyscan github.com >> /home/rpi/.ssh/known_hosts
 
 # Set up ROS workspace
 WORKDIR /home/rpi/catkin_ws/src

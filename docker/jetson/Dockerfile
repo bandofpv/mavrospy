@@ -12,8 +12,7 @@ RUN apt-get update && apt-get install -y \
     net-tools \
     python3-pip \
     vim \
-    nano \
-    openssh-client
+    nano
 
 # Set up jetson user
 RUN useradd -m jetson && echo "jetson:jetson" | chpasswd && adduser jetson sudo
@@ -31,10 +30,6 @@ USER jetson
 
 # Install pymavlink
 RUN pip3 install pymavlink
-
-# Set up SSH for cloning the repository
-RUN mkdir -p /home/jetson/.ssh && \
-    ssh-keyscan github.com >> /home/jetson/.ssh/known_hosts
 
 # Set up ROS workspace
 WORKDIR /home/jetson/catkin_ws/src

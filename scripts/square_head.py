@@ -21,7 +21,7 @@ def fly_square(c, width, repetitions, altitude):
         c.log_info("Waypoint 4")
         c.goto_xyz_rpy(0.0, width, altitude, 0, 0, 2 * c.pi_2)
         c.goto_xyz_rpy(0.0, 0.0, altitude, 0, 0, 2 * c.pi_2)
-
+        c.log_info("Square Pattern Complete")
 
 def move():
     """

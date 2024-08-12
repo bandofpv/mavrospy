@@ -165,7 +165,6 @@ $ sudo apt install -y ca-certificates curl
 $ sudo install -m 0755 -d /etc/apt/keyrings
 $ sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
 $ sudo chmod a+r /etc/apt/keyrings/docker.asc
-
 $ echo \
   "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
   $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
@@ -274,6 +273,13 @@ On your publishing computer, export the `ROS_MASTER_URI` environment variable. M
 $ export ROS_MASTER_URI=http://master_ip_address:11311
 ```
 
+Make sure your RPi is running the MAVROSPY Docker container:
+
+```
+$ cd ~/mavrospy/docker/rpi
+$ bash run_docker.sh
+```
+
 You can now start our motion capture control node on our RPi via:
 
 ```
@@ -288,18 +294,27 @@ $ roslaunch mocap_qualisys qualisys.launch server_address:=qtm_server_address
 
 Where `qtm_server_address` is the IP address to your QTM server.
 
-To verify your pose topics are being published, run:
+To verify your pose topics are being published, run the following on another terminal on the RPi:
 
 ```
+$ cd ~/mavrospy/docker/rpi
+$ bash run_docker.sh
 $ rostopic echo /qualisys/rigid_body_name/pose
 ```
 
-Where `rigid_body_name` is the name of your rigid body in QTM.
+Where `rigid_body_name` is the name of your rigid body in QTM. **CTRL+C** to exit.
 
 We can verify that our RPi is receiving our pose topic via:
 
 ```
 $ rostopic echo /mavros/vision_pose/pose
+```
+**CTRL+C** to exit.
+
+Additionally, you can check that the PX4 flight contoller is able to calculate a global position estimage via:
+
+```
+$ rostopic echo /mavros/global_position/global
 ```
 
 You can now switch to OFFBOARD mode and watch it fly!

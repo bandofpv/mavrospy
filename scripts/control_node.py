@@ -6,8 +6,11 @@ from mavros_msgs.msg import State, ExtendedState
 from geometry_msgs.msg import Pose, PoseStamped, Twist, Quaternion
 from mavros_msgs.srv import CommandBool, CommandBoolRequest, SetMode, SetModeRequest
 
+# TESTING
 from geographic_msgs.msg import GeoPoint, GeoPointStamped
 from mavros_msgs.srv import CommandLong
+from mavros_msgs.srv import CommandHome
+from mavros_msgs.msg import HomePosition
 
 class MavrospyController:
     """
@@ -25,7 +28,6 @@ class MavrospyController:
 
         # create publishers
         self.cmd_pos_pub = rospy.Publisher("/mavros/setpoint_position/local", PoseStamped, queue_size=1)
-        self.gp_origin_pub = rospy.Publisher("/mavros/global_position/set_gp_origin", GeoPointStamped, queue_size=1)
 
         # create services
         self.mode_service = rospy.ServiceProxy('/mavros/set_mode', SetMode)
@@ -42,28 +44,84 @@ class MavrospyController:
         self.freq = send_rate
         self.rate = rospy.Rate(send_rate)
 
-        self.lat = 389853504  # Hopper Hall 389853504
-        self.lon = -764857648  # Hopper Hall -764857648
-        self.alt = 36810  # Hopper Hall 36810
+        # TESTING
+        self.origin_pub = rospy.Publisher('/mavros/global_position/set_gp_origin', GeoPointStamped, queue_size=10)
+        self.origin_sub = rospy.Subscriber('/mavros/global_position/gp_origin', GeoPointStamped, self.origin_callback)
+        self.origin_set = False
+        self.target_lat = 47.397742
+        self.target_lon = 8.545594
+        self.target_alt = 488.0
+        # try:
+        #     self.run()
+        # except rospy.ROSInterruptException:
+        #     pass
 
         self.log_info("MavrospyController Initiated")
 
+    def set_global_origin(self):
+        rospy.loginfo("Setting global origin...")
+
+        origin_msg = GeoPointStamped()
+        origin_msg.header.stamp = rospy.Time.now()
+        origin_msg.header.frame_id = "map"  # Use "map" as the coordinate reference
+
+        origin_msg.position.latitude = self.target_lat
+        origin_msg.position.longitude = self.target_lon
+        origin_msg.position.altitude = self.target_alt
+
+        rospy.sleep(1)  # Wait for the publisher to connect
+        self.origin_pub.publish(origin_msg)
+        rospy.loginfo("Global origin set command published.")
+
+    def origin_callback(self, msg):
+        if msg.position.latitude == self.target_lat and msg.position.longitude == self.target_lon:
+            self.origin_set = True
+            rospy.loginfo("Global origin confirmed.")
+        else:
+            rospy.logwarn("Global origin mismatch: Expected (%.6f, %.6f) but got (%.6f, %.6f)",
+                          self.target_lat, self.target_lon, msg.position.latitude, msg.position.longitude)
+
+    def run(self):
+        self.set_global_origin()
+
+        rate = rospy.Rate(1)  # 1 Hz
+        while not rospy.is_shutdown():
+            if self.origin_set:
+                rospy.loginfo("Global origin successfully set and verified.")
+                break
+            rate.sleep()
+
     def state_callback(self, data):
+        """
+        Callback for PX4 state data
+        """
         self.current_state = data
 
     def extended_state_callback(self, data):
+        """
+        Callback for PX4 extended state data
+        """
         self.current_extended_state = data
 
     def pose_callback(self, data):
+        """
+        Callback for PX4 pose data
+        """
         self.timestamp = data.header.stamp  # timestamp pose message
         self.pose = data.pose
 
     def log_info(self, info):
-        if not rospy.is_shutdown():
+        """
+        Log messaging
+        """
+        if not rospy.is_shutdown():  # only log info when mavrospy node is running
             rospy.loginfo(info)
 
     def log_error(self, error):
-        if not rospy.is_shutdown():
+        """
+        Error messaging
+        """
+        if not rospy.is_shutdown():  # only log errors when mavropsy node is running
             rospy.logerr(error)
 
     def pause(self):
@@ -75,36 +133,39 @@ class MavrospyController:
         except rospy.ROSException as e:
             self.log_error(e)
 
-    def set_ekf_origin(self, origin: GeoPoint) -> None:
-        """Set the EKF origin.
-
-        This is required for navigation on a vehicle with one of the provided localizers.
-
-        Args:
-            origin: The EKF origin to set.
+    def service_request(self, service, request):
         """
-        origin_stamped = GeoPointStamped()
-        origin_stamped.header.stamp = rospy.get_rostime()
-        origin_stamped.position = origin
-        self.gp_origin_pub.publish(origin_stamped)
+        Attempt to service request
+        """
+        try:
+            resp = service(request)  # service request
 
+            # Check for response success
+            success = None
+            for field_name in ['success', 'result', 'status', 'mode_sent']:  # Common names to check
+                if hasattr(resp, field_name):
+                    success = getattr(resp, field_name)
+                    break
 
-    def arm(self, arm_status, timeout=5):
+            if success is None:  # check if success field was found
+                self.log_error("Could not determine if the service call was successful")
+            elif not success:
+                self.log_error(f"Failed to set {service} service")
+
+        except rospy.ServiceException as e:
+            self.log_error(e)
+
+    def arm(self, status, timeout=5):
         """
         Arm the throttle.
         """
-        info = "arm" if arm_status else "disarm"
+        info = "arm" if status else "disarm"
 
         try:
-            for i in range(timeout * self.freq):  # loop for given timeout
-                try:
-                    resp = self.arm_service(arm_status)  # set arm status
-                    if not resp.success:
-                        self.log_error(f"Failed to send {info} command")
-                except rospy.ServiceException as e:
-                    self.log_error(e)
+            for i in range(timeout * self.freq):  # loop until timeout
+                self.service_request(self.arm_service, status)  # attempt to set arm status
 
-                if self.current_state.armed == arm_status:  # break when arm status is set
+                if self.current_state.armed == status:  # break when arm status is set
                     self.log_info(f"{info.capitalize()}ed Throttle")
                     return True
 
@@ -114,9 +175,32 @@ class MavrospyController:
         except rospy.ROSException as e:
             self.log_error(e)
 
+    def check_offboard(self):
+        """
+        Check if PX4 is in OFFBOARD mode
+        """
+        if self.current_state.mode != "OFFBOARD":
+            self.log_error("Not in OFFBOARD mode")
+            return False
+
+    def is_close(self, target, current, tolerance, quat=False):
+        """
+        Chek if UAV is close to target set point
+
+        Recommended tolerances: point x & y --> 0.2
+                                point z --> 0.5
+                                quaternion x, y, z, & w --> 0.1
+        """
+        if quat:  # if comparing quaternions
+            return abs(target - current) < tolerance or abs(target + current) < tolerance
+
+        return abs(target - current) < tolerance
+
+
     def goto(self, pose):
         """
-        Set the given pose as a next set point by sending a SET_POSITION_TARGET_LOCAL_NED message. The copter must be in OFFBOARD mode for this to work.
+        Set the given pose as a next set point by sending a SET_POSITION_TARGET_LOCAL_NED message.
+        The copter must be in OFFBOARD mode for this to work.
         """
         # initialize ROS PoseStamped message
         pose_stamped = PoseStamped()
@@ -131,84 +215,47 @@ class MavrospyController:
     def goto_xyz_rpy(self, x, y, z, roll, pitch, yaw, timeout=30, isClose=True, checkMode=True):
         """
         Sets the given pose as a next set point for given timeout (seconds).
+
+        isClose: check if UAV is close to target set point
+        checkMode: check if UAV is in OFFBOARD mode
         """
-        # must be in OFFBOARD mode
-        if checkMode and self.current_state.mode != "OFFBOARD":
-            self.log_error("Cannot execute goto: not in OFFBOARD mode")
-            return False
+        # Check if in OFFBOARD mode
+        if checkMode:
+            self.check_offboard()
 
         # initialize Pose message
         pose = Pose()
-        pose.position.x = x
-        pose.position.y = y
-        pose.position.z = z
+        pose.position.x, pose.position.y, pose.position.z = x, y, z
 
         # convert euler angles (roll, pitch, yaw) to quaternion (x, y, z, w)
         quaternion = tf.transformations.quaternion_from_euler(roll, pitch, yaw + self.pi_2)
+        pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w = quaternion[0], quaternion[1], quaternion[2], quaternion[3]
 
-        pose.orientation.x = quaternion[0]
-        pose.orientation.y = quaternion[1]
-        pose.orientation.z = quaternion[2]
-        pose.orientation.w = quaternion[3]
+        for i in range(int(timeout * self.freq)):  # loop for given timeout
+            self.goto(pose)  # move to set point
 
-        # TODO: play around with tolerance and set tolerance lower or quats... understand quats
-
-        # check if UAV is close to target setpoint
-        def is_close(target, current, tolerance, quat=False):
-            """
-            Recommended tolerances: point x & y --> 0.2
-                                    point z --> 0.5
-                                    quaternion x, y, z, & w --> 0.1
-            """
-            # if comparing quaternions
-            if quat:
-                return abs(target - current) < tolerance or abs(target + current) < tolerance
-
-            return abs(target - current) < tolerance
-
-        if isClose:
-            for i in range(timeout * self.freq):
-                self.goto(pose)
-                self.pause()
-
-                if (is_close(x, self.pose.position.x, 0.2) and
-                    is_close(y, self.pose.position.y, 0.2) and
-                    is_close(z, self.pose.position.z, 0.5) and
-                    is_close(quaternion[0], self.pose.orientation.x, 0.1, True) and
-                    is_close(quaternion[1], self.pose.orientation.y, 0.1, True) and
-                    is_close(quaternion[2], self.pose.orientation.z, 0.1, True) and
-                    is_close(quaternion[3], self.pose.orientation.w, 0.1, True)):
+            # check if isClose
+            if (isClose and
+                self.is_close(x, self.pose.position.x, 0.2) and
+                self.is_close(y, self.pose.position.y, 0.2) and
+                self.is_close(z, self.pose.position.z, 0.5) and
+                self.is_close(quaternion[0], self.pose.orientation.x, 0.1, True) and
+                self.is_close(quaternion[1], self.pose.orientation.y, 0.1, True) and
+                self.is_close(quaternion[2], self.pose.orientation.z, 0.1, True) and
+                self.is_close(quaternion[3], self.pose.orientation.w, 0.1, True)):
                     self.log_info("Reached target position")
                     break
-        else:
-            for i in range(int(timeout * self.freq)):
-                self.goto(pose)
-                self.pause()
+
+            self.pause()
 
     def takeoff(self, height, timeout=30):
         """
-        Arm the throttle and takeoff to a few feet
-
-        WIP
+        Arm the throttle and takeoff to given height (feet)
         """
         self.arm(True)  # arm throttle
 
-        # Takeoff
-
-        self.goto_xyz_rpy(0, 0, height, 0, 0, 0, timeout)
-
-        # explicit_quat = [self.pose.orientation.x, self.pose.orientation.y,
-        #                  self.pose.orientation.z, self.pose.orientation.w]
-        # roll, pitch, yaw = tf.transformations.euler_from_quaternion(explicit_quat)
-
         self.log_info("Taking Off")
-        # self.goto_xyz_rpy(self.pose.position.x, self.pose.position.y, height, roll, pitch, yaw, timeout)
-
-    def test_takeoff(self, height, timeout):
-        """
-        WIP
-        """
-        self.arm(True)
+        self.goto_xyz_rpy(0, 0, height, 0, 0, 0, timeout)  # takeoff
 
     def land(self):
         """
@@ -217,19 +264,14 @@ class MavrospyController:
         self.log_info("Changing Mode: AUTO.LAND")
 
         while not rospy.is_shutdown():
-            try:
-                resp = self.mode_service(custom_mode="AUTO.LAND")  # set mode to AUTO.LAND
-                if not resp.mode_sent:
-                    self.log_error("Failed to Change Mode: AUTO.LAND")
-            except rospy.ServiceException as e:
-                self.log_error(e)
+            self.service_request(self.mode_service, SetModeRequest(custom_mode="AUTO.LAND"))  # change mode to AUTO.LAND
 
-            # break when on the ground
+            # Break when on the ground
             if self.current_extended_state.landed_state == mavutil.mavlink.MAV_LANDED_STATE_ON_GROUND:
                 break
+
             self.pause()
 
         self.log_info("Landed")
 
         self.arm(False)  # disarm throttle
-        self.log_info("Disarmed")

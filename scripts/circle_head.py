@@ -27,6 +27,8 @@ def fly_circle(c, radius, repetitions, altitude, resolution=180):
             else:  # just send command regardless of current position
                 c.goto_xyz_rpy(x, y, altitude, 0, 0, yaw, 1/20, isClose=False)
 
+        c.log_info("Circle Pattern Complete")
+
 def move():
     """
     Move UAV in a circle pattern at given height and width for given

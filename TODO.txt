@@ -11,3 +11,5 @@ Setup Jetson Nano 2GB
 Intel Camera --> rosbag
 
 Get GPS Origin and Home working
+
+Clean up arm method log messaging (to much?)
