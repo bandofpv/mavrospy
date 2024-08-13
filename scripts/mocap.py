@@ -27,7 +27,7 @@ def simple_demo():
 
     # c.set_home_position()
 
-    c.log_info(f"Takeoff: {alt}m")
+    c.log_info(f"Takeoff: {alt}ft")
     c.takeoff(alt)
 
     c.log_info("Waypoint 1: position control")

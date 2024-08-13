@@ -34,13 +34,12 @@ def move():
 
     min_height = 1.0  # min height to fly at
     max_height = 6.0  # max height to fly at
-    width = 5.0  # width of the circle pattern
-    levels = 3  # number of different altitudes to complete circle pattern
-    repetitions = 3   # number of times to repeat the circle pattern at each altitude
+    width = 10.0  # width of the circle pattern
+    levels = 10  # number of different altitude to complete square pattern
     radius = width / 2 #radius of circle pattern
 
-    # Create list of different altitudes to fly from min to max height and number of levels
-    altitudes = [min_height + (max_height - min_height) * l / levels for l in range(1, levels+1)]
+    altitudes = [min_height + (max_height - min_height) * l / levels for l in range(1, levels + 1)]
+    radii = [radius * i / levels for i in range(1, levels + 1)]
 
     # Wait until drone is in OFFBOARD mode
     while not rospy.is_shutdown():
@@ -61,11 +60,8 @@ def move():
     # Go to first point on circle
     c.goto_xyz_rpy(radius*2, radius, altitudes[0], 0, 0, 0)
 
-    # Fly circle pattern at all altitudes
-    for altitude in altitudes:
-        c.log_info(f"Pattern Altitude: {altitude}ft")
-        for r in range(repetitions):  # repeat circle pattern
-            fly_circle(c, radius, altitude)
+    for altitude, radius in zip(altitudes, radii):
+        fly_circle(c, radius, altitude)
 
     # Go back home
     c.goto_xyz_rpy(0, 0, altitudes[0], 0, 0, 0)

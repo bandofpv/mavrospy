@@ -4,20 +4,21 @@ import tf
 import rospy
 from control_node import MavrospyController
 
-def fly_square(c, width, repetitions, altitude):
+
+def fly_square(c, width, altitude):
     """
     Fly in a square pattern facing only in the forward direction
     """
-    for r in range(repetitions):
-        c.log_info("Waypoint 1")
-        c.goto_xyz_rpy(width, 0.0, altitude, 0, 0, 0)
-        c.log_info("Waypoint 2")
-        c.goto_xyz_rpy(width, width, altitude, 0, 0, 0)
-        c.log_info("Waypoint 3")
-        c.goto_xyz_rpy(0.0, width, altitude, 0, 0, 0)
-        c.log_info("Waypoint 4")
-        c.goto_xyz_rpy(0.0, 0.0, altitude, 0, 0, 0)
-        c.loginfo("Square Pattern Complete")
+    c.log_info("Waypoint 1")
+    c.goto_xyz_rpy(width, 0.0, altitude, 0, 0, 0)
+    c.log_info("Waypoint 2")
+    c.goto_xyz_rpy(width, width, altitude, 0, 0, 0)
+    c.log_info("Waypoint 3")
+    c.goto_xyz_rpy(0.0, width, altitude, 0, 0, 0)
+    c.log_info("Waypoint 4")
+    c.goto_xyz_rpy(0.0, 0.0, altitude, 0, 0, 0)
+    c.log_info("Square Pattern Complete")
+
 
 def move():
     """
@@ -28,16 +29,14 @@ def move():
     rate = 20
     c = MavrospyController(rate)  # create mavrospy controller instance
 
+    min_height = 1.0  # min height to fly at
     max_height = 6.0  # max height to fly at
-    max_width = 10.0  # width of the square pattern
-    levels = 3  # number of different altitude to complete square pattern
+    width = 5.0  # width of the square pattern
+    levels = 3  # number of different altitudes to complete square pattern
     repetitions = 3   # number of times to repeat the square pattern at each altitude
 
-    altitudes = []
-
-    # Create list of different altitudes to fly at given max height and number of levels
-    for l in range(1, levels + 1):
-        altitudes.append((max_height * l) / levels)
+    # Create list of different altitudes to fly from min to max height and number of levels
+    altitudes = [min_height + (max_height - min_height) * l / levels for l in range(1, levels+1)]
 
     # Wait until drone is in OFFBOARD mode
     while not rospy.is_shutdown():
@@ -49,12 +48,15 @@ def move():
         c.goto_xyz_rpy(0, 0, 0, 0, 0, 0, 1, False, False)
 
     # Takeoff at lowest altitude in altitudes list
-    c.log_info(f"Takeoff: {altitudes[0]}m")
+    c.log_info(f"Takeoff: {altitudes[0]}ft")
     c.takeoff(altitudes[0])
 
     # Fly in a square pattern at all altitudes
     for altitude in altitudes:
-        fly_square(c, max_width, repetitions, altitude)
+        c.log_info(f"Pattern Altitude: {altitude}ft")
+        c.goto_xyz_rpy(0.0, 0.0, altitude, 0, 0, 0)  # reset to origin
+        for r in range(repetitions):  # repeat square pattern
+            fly_square(c, width, altitude)
 
     # Land
     c.log_info("Landing")
