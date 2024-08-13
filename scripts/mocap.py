@@ -21,11 +21,7 @@ def simple_demo():
             c.log_info("OFFBOARD enabled")
             break
 
-        c.set_ekf_origin(GeoPoint(latitude=44.65870, longitude=-124.0655, altitude=0.0))
-
         c.goto_xyz_rpy(0, 0, 0, 0, 0, 0, 1, False, False)
-
-    # c.set_home_position()
 
     c.log_info(f"Takeoff: {alt}ft")
     c.takeoff(alt)
@@ -44,11 +40,7 @@ def simple_demo():
     c.goto_xyz_rpy(0.0, 0.0, alt, 0, 0, 2 * c.pi_2)
 
     c.log_info("Landing")
-    # c.land()
-
-    c.goto_xyz_rpy(0, 0, 0, 0, 0, 2 * c.pi_2)
-    c.arm(False)
+    c.land()
 
 if __name__ == "__main__":
     simple_demo()
-

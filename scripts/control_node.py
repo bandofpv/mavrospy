@@ -48,13 +48,16 @@ class MavrospyController:
         self.origin_pub = rospy.Publisher('/mavros/global_position/set_gp_origin', GeoPointStamped, queue_size=10)
         self.origin_sub = rospy.Subscriber('/mavros/global_position/gp_origin', GeoPointStamped, self.origin_callback)
         self.origin_set = False
-        self.target_lat = 47.397742
-        self.target_lon = 8.545594
-        self.target_alt = 488.0
-        # try:
-        #     self.run()
-        # except rospy.ROSInterruptException:
-        #     pass
+        self.target_lat = 38.9853504
+        self.target_lon = -76.4857648
+        self.target_alt = 36.810
+        try:
+            self.run()
+        except rospy.ROSInterruptException:
+            pass
+
+        self.set_home_service = rospy.ServiceProxy('/mavros/cmd/set_home', CommandHome)
+        self.set_home_position()
 
         self.log_info("MavrospyController Initiated")
 
@@ -86,10 +89,22 @@ class MavrospyController:
 
         rate = rospy.Rate(1)  # 1 Hz
         while not rospy.is_shutdown():
+            self.set_global_origin()
             if self.origin_set:
                 rospy.loginfo("Global origin successfully set and verified.")
                 break
             rate.sleep()
+
+    def set_home_position(self):
+            try:
+                # Set the current GPS position as home
+                response = self.set_home_service(current_gps=True, latitude=0, longitude=0, altitude=0)
+                if response.success:
+                    rospy.loginfo("Home position set successfully!")
+                else:
+                    rospy.logwarn("Failed to set home position.")
+            except rospy.ServiceException as e:
+                rospy.logerr("Service call failed: %s" % e)
 
     def state_callback(self, data):
         """
