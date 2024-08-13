@@ -224,7 +224,48 @@ Motion capture allows for non-GPS navigation by sending pose estimation data to 
 
 This assumes that you have already set up your Qualisys motion capture system and configured a rigid body for your UAV.
 
-QTM is only supported via Windows, so we will have to use another computer utilizing a Linux distro to act as our ROS pose publisher. The best practice is to connect these two machines via Ethernet to avoid latency and packet loss. 
+QTM is only supported via Windows, so we will have to use another computer utilizing a Linux distro to act as our ROS pose publisher. The best practice is to connect these two machines via Ethernet to avoid latency and packet loss.
+
+### Docker Environment
+
+Setting up Qualisys ROS on Linux is made easy via Docker.
+
+This tutorial will assume you are running on a Linux OS, but Docker can be used on both Mac and Windows via [Docker Desktop](https://docs.docker.com/get-docker/).
+
+First, make sure you installed [Docker Engine](https://docs.docker.com/engine/install/). It is also recommend you follow the [Linux Post-Installation Steps](https://docs.docker.com/engine/install/linux-postinstall/) as well to manage Docker as a non-root user.
+
+We can verify our Docker installation via:
+
+```
+$ docker run hello-world
+```
+
+We can now build our Docker image via the following commands:
+
+```
+$ cd ~/mavrospy/docker/mocap
+$ bash run_docker.sh
+```
+
+This script will automatically build the Docker image and open it in a Docker container.
+
+We can now publish Qualisys pose estimations through ROS topics via:
+
+```
+$ roslaunch mocap_qualisys qualisys.launch server_address:=qtm_server_address
+```
+
+Where `qtm_server_address` is the IP address to your QTM server.
+
+We can verify that our pose topics are being published by opening another terminal window and running:
+
+```
+$ cd ~/mavrospy/docker/mocap
+$ bash run_docker.sh
+$ rostopic list
+```
+
+This will list all ros topics being published. You should see a topic named `/qualisys/rigid_body_name/pose`. Where `rigid_body_name` is the name of your rigid body in QTM.
 
 ### PX4 Parameters
 
@@ -273,12 +314,26 @@ On your publishing computer, export the `ROS_MASTER_URI` environment variable. M
 $ export ROS_MASTER_URI=http://master_ip_address:11311
 ```
 
-Make sure your RPi is running the MAVROSPY Docker container:
+On your RPi, make sure your running the MAVROSPY Docker container:
 
 ```
 $ cd ~/mavrospy/docker/rpi
 $ bash run_docker.sh
 ```
+
+We must modify the `mocap.launch` file to direct your rigid body name to the relay topic node. Open the file:
+
+```
+$ nano ~/mavrospy/launch/mocap.launch
+```
+
+Find this line:
+
+```
+<node pkg="topic_tools" type="relay" name="relay" output="screen" args="/qualisys/My_Quad/pose /mavros/vision_pose/pose"/>
+```
+
+Replace `My_Quad` with the name of you rigid body.
 
 You can now start our motion capture control node on our RPi via:
 
@@ -319,19 +374,9 @@ $ rostopic echo /mavros/global_position/global
 
 You can now switch to OFFBOARD mode and watch it fly!
 
-## Development Environment
+## Simulation Environment
 
-Setting up a development environment on your desktop machine is helpful for running simulations before testing it on your live UAV. We can easily set up our environment via Docker.
-
-This tutorial will assume you are running on a Linux OS, but Docker can be used on both Mac and Windows via [Docker Desktop](https://docs.docker.com/get-docker/).
-
-First, make sure you installed [Docker Engine](https://docs.docker.com/engine/install/). It is also recommend you follow the [Linux Post-Installation Steps](https://docs.docker.com/engine/install/linux-postinstall/) as well to manage Docker as a non-root user.
-
-We can verify our Docker installation via:
-
-```
-$ docker run hello-world
-```
+Setting up a simulation environment on your desktop machine is helpful for running simulations before testing it on your live UAV. We can easily set up our environment via Docker.
 
 ### NVIDIA GPU Acceleration
 

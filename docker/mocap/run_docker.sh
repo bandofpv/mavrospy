@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Variables
-IMAGE_NAME="mavrospy-dev"
+IMAGE_NAME="mavrospy-mocap"
 IMAGE_TAG="latest"
 DOCKERFILE_PATH="./Dockerfile"
-CONTAINER_NAME="mavrospy-dev-container"
+CONTAINER_NAME="mavrospy-mocap-container"
 
 # Prevent running as root.
 if [[ $(id -u) -eq 0 ]]; then
@@ -64,4 +64,4 @@ fi
 
 # Run docker container
 echo "Running $IMAGE_NAME:$IMAGE_TAG."
-docker run -it --rm --net=host --name $CONTAINER_NAME --runtime=nvidia --gpus all -e NVIDIA_VISIBLE_DEVICES=all -e NVIDIA_DRIVER_CAPABILITIES=all -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix $IMAGE_NAME:$IMAGE_TAG
+docker run -it --rm --net=host --name $CONTAINER_NAME $IMAGE_NAME:$IMAGE_TAG

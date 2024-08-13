@@ -1,16 +1,17 @@
 <?xml version="1.0"?>
 <launch>
-	<arg name="fcu_url" default="/dev/serial0:921600" />
+<arg name="fcu_url" default="/dev/serial0:921600" />
 
-	<!-- Include the MAVROS px4 node -->
-	<include file="$(find mavros)/launch/px4.launch">
-		<arg name="fcu_url" value="$(arg fcu_url)" />
-	</include>
+  <!-- Include the MAVROS px4 node -->
+  <include file="$(find mavros)/launch/px4.launch">
+    <arg name="fcu_url" value="$(arg fcu_url)" />
+  </include>
 
-    <!-- Relay Qualisys pose topic to MAVROS vision_pose topic -->
-	<node pkg="topic_tools" type="relay" name="relay" output="screen" args="/qualisys/Bernas_Quad/pose /mavros/vision_pose/pose"/>
+  <!-- Relay Qualisys pose topic to MAVROS vision_pose topic -->
+  <!-- ACTION REQUIRED: Replace My_Quad with the name of your rigid body -->
+  <node pkg="topic_tools" type="relay" name="relay" output="screen" args="/qualisys/My_Quad/pose /mavros/vision_pose/pose"/>
 
-	<node pkg="mavrospy" type="test.py" name="mocap_to_tf" required="true" output="screen"/>
-	<node pkg="mavrospy" type="mocap.py" name="mavrospy" required="true" output="screen"/>
-
+  <!-- Launch MAVROSPY and Fake GPS node -->
+  <node pkg="mavrospy" type="fake_gps.py" name="mocap_to_tf" required="true" output="screen"/>
+  <node pkg="mavrospy" type="mocap.py" name="mavrospy" required="true" output="screen"/>
 </launch>
