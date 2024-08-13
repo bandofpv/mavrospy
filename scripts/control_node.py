@@ -11,6 +11,7 @@ from geographic_msgs.msg import GeoPoint, GeoPointStamped
 from mavros_msgs.srv import CommandLong
 from mavros_msgs.srv import CommandHome
 from mavros_msgs.msg import HomePosition
+from sensor_msgs.msg import NavSatFix
 
 class MavrospyController:
     """
@@ -56,8 +57,21 @@ class MavrospyController:
         except rospy.ROSInterruptException:
             pass
 
+        self.current_gps = None
+
+        # Subscribe to the current GPS topic
+        rospy.Subscriber('/mavros/global_position/global', NavSatFix, self.gps_callback)
+
         self.set_home_service = rospy.ServiceProxy('/mavros/cmd/set_home', CommandHome)
         self.set_home_position()
+
+        rate = rospy.Rate(1)  # 1 Hz
+        while not rospy.is_shutdown():
+            self.set_home_position()
+            if self.set_home_position():
+                rospy.loginfo("Home position successfully set.")
+                break
+            rate.sleep()
 
         self.log_info("MavrospyController Initiated")
 
@@ -95,16 +109,23 @@ class MavrospyController:
                 break
             rate.sleep()
 
+    def gps_callback(self, data):
+            self.current_gps = data
+
     def set_home_position(self):
-            try:
-                # Set the current GPS position as home
-                response = self.set_home_service(current_gps=True, latitude=0, longitude=0, altitude=0)
-                if response.success:
-                    rospy.loginfo("Home position set successfully!")
-                else:
-                    rospy.logwarn("Failed to set home position.")
-            except rospy.ServiceException as e:
-                rospy.logerr("Service call failed: %s" % e)
+            if self.current_gps is not None:
+                try:
+                    # Set the current GPS position as home
+                    response = self.set_home_service(current_gps=True, latitude=0, longitude=0, altitude=0)
+                    if response.success:
+                        rospy.loginfo("Home position set successfully!")
+                        return True
+                    else:
+                        rospy.logwarn("Failed to set home position.")
+                except rospy.ServiceException as e:
+                    rospy.logerr("Service call failed: %s" % e)
+            else:
+                rospy.logwarn("Current GPS location is not available yet.")
 
     def state_callback(self, data):
         """
