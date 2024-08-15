@@ -1,5 +1,5 @@
 # Use ROS Noetic as the base image
-FROM ros:noetic
+FROM ubuntu:focal
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
@@ -8,11 +8,24 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
     git \
     sudo \
-    wget \
     net-tools \
-    python3-pip \
     vim \
     nano
+
+# Pre-configure the keyboard layout options to avoid interactive prompts
+RUN apt-get update && \
+    apt-get install -y debconf-utils && \
+    echo 'keyboard-configuration keyboard-configuration/layoutcode select us' | debconf-set-selections && \
+    echo 'keyboard-configuration keyboard-configuration/model select Generic 105-key PC (intl.)' | debconf-set-selections
+
+# Setup locale
+RUN apt-get update && apt-get install -y locales tzdata && \
+    locale-gen en_US en_US.UTF-8 && \
+    update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 && \
+    ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime && \
+    dpkg-reconfigure --frontend noninteractive tzdata
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
 
 # Set up jetson user
 RUN useradd -m jetson && echo "jetson:jetson" | chpasswd && adduser jetson sudo
@@ -20,41 +33,36 @@ RUN useradd -m jetson && echo "jetson:jetson" | chpasswd && adduser jetson sudo
 # Configure sudoers to not require a password for sudo
 RUN echo "jetson ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# Install MAVROS
-RUN sudo apt-get install -y ros-noetic-mavros ros-noetic-mavros-extras ros-noetic-mavros-msgs && \
-    wget https://raw.githubusercontent.com/mavlink/mavros/master/mavros/scripts/install_geographiclib_datasets.sh && \
-    sudo bash ./install_geographiclib_datasets.sh
-
 # Switch to jetson user
 USER jetson
 
-# Install pymavlink
-RUN pip3 install pymavlink
+# Install Dependencies
+RUN sudo apt-get update && sudo apt-get install -y \
+    gnupg \
+    wget \
+    software-properties-common && \
+    sudo add-apt-repository universe
 
-# Set up ROS workspace
-WORKDIR /home/jetson/catkin_ws/src
-RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && catkin_init_workspace"
+# Setup Source
+RUN wget -qO - https://isaac.download.nvidia.com/isaac-ros/repos.key | sudo apt-key add - && \
+    grep -qxF "deb https://isaac.download.nvidia.com/isaac-ros/ubuntu/main $(lsb_release -cs) main" /etc/apt/sources.list || \
+    echo "deb https://isaac.download.nvidia.com/isaac-ros/ubuntu/main $(lsb_release -cs) main" | sudo tee -a /etc/apt/sources.list && \
+    sudo apt-get update && \
+    sudo apt update && sudo apt install curl -y && \
+    sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
 
-# Clone MAVROSPY repo
-RUN git clone https://github.com/bandofpv/mavrospy.git
+# Install core ROS2 Packages
+RUN sudo apt-get update && sudo apt-get install -y ros-humble-desktop
 
-# Install ROS package dependencies
-WORKDIR /home/jetson/catkin_ws
-RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && rosdep update" && \
-    /bin/bash -c "source /opt/ros/noetic/setup.bash && rosdep install --from-paths src --ignore-src -r -y"
-
-# Build the ROS workspace
-RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && catkin_make"
+# Install ROS2 RealSense Package
+RUN sudo apt install -y ros-humble-realsense2-camera
 
 # Add start up commands to .bashrc
-RUN echo "source /opt/ros/noetic/setup.bash" >> /home/jetson/.bashrc && \
-    echo "source /home/jetson/catkin_ws/devel/setup.bash" >> /home/jetson/.bashrc && \
-    echo "sudo chown jetson /dev/serial0" >> /home/jetson/.bashrc && \
-    echo "export ROS_IP=$(hostname -I | awk '{print $1}')" >> /home/jetson/.bashrc && \
-    echo "export ROS_MASTER_URI=http://$(hostname -I | awk '{print $1}'):11311" >> /home/jetson/.bashrc
+RUN echo "source /opt/ros/humble/setup.bash" >> /home/jetson/.bashrc
 
-# Start in MAVROSPY direcotry
-WORKDIR /home/jetson/catkin_ws/src/mavrospy
+# Start in home direcotry
+WORKDIR /home/jetson
 
 # Clean up
 RUN sudo rm -rf /var/lib/apt/lists/* && \

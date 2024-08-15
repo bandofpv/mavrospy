@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <launch>
   <!-- Movement type argument -->
-  <arg name="movement" default="square" />
+  <arg name="pattern" default="square" />
 
   <!-- Include the MAVROS node with SITL and Gazebo -->
   <include file="$(find px4)/launch/mavros_posix_sitl.launch"></include>
 
   <!-- Launch MAVROSPY node with selected movment pattern -->
-  <node pkg="mavrospy" type="$(arg movement).py" name="mavrospy" required="true" output="screen" />
+  <node pkg="mavrospy" type="$(arg pattern).py" name="mavrospy" required="true" output="screen" />
 
 </launch>

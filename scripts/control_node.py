@@ -7,17 +7,13 @@ from geometry_msgs.msg import Pose, PoseStamped, Twist, Quaternion
 from mavros_msgs.srv import CommandBool, CommandBoolRequest, SetMode, SetModeRequest
 
 # TESTING
-from geographic_msgs.msg import GeoPoint, GeoPointStamped
-from mavros_msgs.srv import CommandLong
-from mavros_msgs.srv import CommandHome
-from mavros_msgs.msg import HomePosition
-from sensor_msgs.msg import NavSatFix
+from geographic_msgs.msg import GeoPointStamped
+from mavros_msgs.srv import CommandHome, NavSatFix
 
 class MavrospyController:
     """
     Controller class to help interface with mavros
     """
-
     def __init__(self, send_rate):
         # initialize our control node
         rospy.init_node("mavrospy_node")
@@ -49,9 +45,9 @@ class MavrospyController:
         self.origin_pub = rospy.Publisher('/mavros/global_position/set_gp_origin', GeoPointStamped, queue_size=10)
         self.origin_sub = rospy.Subscriber('/mavros/global_position/gp_origin', GeoPointStamped, self.origin_callback)
         self.origin_set = False
-        self.target_lat = 38.9853504
-        self.target_lon = -76.4857648
-        self.target_alt = 36.810
+        self.target_lat = 38.9853504  # Latitude of the Hopper Hall
+        self.target_lon = -76.4857648  # Longitude of the Hopper Hall
+        self.target_alt = 36.810  # Altitude of the Hopper Hall
         try:
             self.run()
         except rospy.ROSInterruptException:
@@ -76,8 +72,6 @@ class MavrospyController:
         self.log_info("MavrospyController Initiated")
 
     def set_global_origin(self):
-        rospy.loginfo("Setting global origin...")
-
         origin_msg = GeoPointStamped()
         origin_msg.header.stamp = rospy.Time.now()
         origin_msg.header.frame_id = "map"  # Use "map" as the coordinate reference
@@ -88,7 +82,6 @@ class MavrospyController:
 
         rospy.sleep(1)  # Wait for the publisher to connect
         self.origin_pub.publish(origin_msg)
-        rospy.loginfo("Global origin set command published.")
 
     def origin_callback(self, msg):
         if msg.position.latitude == self.target_lat and msg.position.longitude == self.target_lon:
@@ -99,9 +92,9 @@ class MavrospyController:
                           self.target_lat, self.target_lon, msg.position.latitude, msg.position.longitude)
 
     def run(self):
-        self.set_global_origin()
-
+        rospy.loginfo("Setting global origin...")
         rate = rospy.Rate(1)  # 1 Hz
+
         while not rospy.is_shutdown():
             self.set_global_origin()
             if self.origin_set:
