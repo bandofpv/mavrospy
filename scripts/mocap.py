@@ -15,6 +15,7 @@ def simple_demo():
 
     c = MavrospyController(rate)
     alt = 2.0
+    side = 4.0
 
     while not rospy.is_shutdown():
         if c.current_state.mode == "OFFBOARD":
@@ -28,15 +29,15 @@ def simple_demo():
 
     c.log_info("Waypoint 1: position control")
     c.goto_xyz_rpy(0.0, 0.0, alt, 0, 0, -1 * c.pi_2)
-    c.goto_xyz_rpy(2.0, 0.0, alt, 0, 0, -1 * c.pi_2)
+    c.goto_xyz_rpy(side, 0.0, alt, 0, 0, -1 * c.pi_2)
     c.log_info("Waypoint 2: position control")
-    c.goto_xyz_rpy(2.0, 0.0, alt, 0, 0, 0)
-    c.goto_xyz_rpy(2.0, 2.0, alt, 0, 0, 0)
+    c.goto_xyz_rpy(side, 0.0, alt, 0, 0, 0)
+    c.goto_xyz_rpy(side, side, alt, 0, 0, 0)
     c.log_info("Waypoint 3: position control")
-    c.goto_xyz_rpy(2.0, 2.0, alt, 0, 0, c.pi_2)
-    c.goto_xyz_rpy(0.0, 2.0, alt, 0, 0, c.pi_2)
+    c.goto_xyz_rpy(side, side, alt, 0, 0, c.pi_2)
+    c.goto_xyz_rpy(0.0, side, alt, 0, 0, c.pi_2)
     c.log_info("Waypoint 4: position control")
-    c.goto_xyz_rpy(0.0, 2.0, alt, 0, 0, 2 * c.pi_2)
+    c.goto_xyz_rpy(0.0, side, alt, 0, 0, 2 * c.pi_2)
     c.goto_xyz_rpy(0.0, 0.0, alt, 0, 0, 2 * c.pi_2)
 
     c.log_info("Landing")

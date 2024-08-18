@@ -7,7 +7,7 @@ from control_node import MavrospyController
 
 def fly_figure_eight(c, width, length, altitude, resolution=360):
     """
-    Fly in a figure-eight pattern facing only in forward direction
+    Fly in a figure-eight pattern facing in the direction of travel
     """
     # Generate figure-eight points
     for i in range(resolution):
@@ -19,7 +19,18 @@ def fly_figure_eight(c, width, length, altitude, resolution=360):
         x += width/2
         y += length/2
 
-        c.goto_xyz_rpy(x, y, altitude, 0, 0, 0, 1/20, isClose=False)  # move
+        # Calculate next point
+        next_theta = 2 * math.pi * (i + 1) / resolution
+        next_x = width/2 * math.cos(next_theta)
+        next_y = length/2 * math.sin(2 * next_theta)
+
+        # Account for center offset
+        next_x += width/2
+        next_y += length/2
+
+        yaw = math.atan2(next_y - y, next_x - x) - math.pi/2  # calculate yaw
+
+        c.goto_xyz_rpy(x, y, altitude, 0, 0, yaw, 1/20, isClose=False)  # move
 
     c.log_info("Figure-Eight Pattern Complete")
 

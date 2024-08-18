@@ -13,3 +13,7 @@ Intel Camera --> rosbag
 Clean up arm method log messaging (to much?)
 
 Add jetson docker
+
+Check if modified fake gps works
+
+Check size parameters for mocap

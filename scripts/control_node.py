@@ -18,7 +18,6 @@ class MavrospyController:
 
         # Get mocap argument
         self.vision = rospy.get_param("~vision", False)
-        print("Vision: ", self.vision)
 
         # Create subscribers
         rospy.Subscriber("/mavros/state", State, self.state_callback)
@@ -52,7 +51,8 @@ class MavrospyController:
 
         # Status variables
         self.origin_set = False
-        self.current_gps = None
+        self.current_gps = NavSatFix()
+        self.current_gps.status.status = NavSatStatus.STATUS_NO_FIX
 
         # If using vision set global origin and home position
         if self.vision:

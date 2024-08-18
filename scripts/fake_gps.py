@@ -38,6 +38,7 @@ def main():
     rospy.Subscriber('/mavros/vision_pose/pose', PoseStamped, pose_callback)
 
     # Publisher to the /mavros/fake_gps/mocap/tf topic
+    global tf_pub
     tf_pub = rospy.Publisher('/mavros/fake_gps/mocap/tf', TransformStamped, queue_size=10)
 
     rospy.spin()
