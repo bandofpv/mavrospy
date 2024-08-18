@@ -10,6 +10,6 @@ Setup Jetson Nano 2GB
 
 Intel Camera --> rosbag
 
-Get GPS Origin and Home working
+Add mocap argument for control node
 
 Clean up arm method log messaging (to much?)

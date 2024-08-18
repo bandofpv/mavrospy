@@ -6,7 +6,7 @@ from sensor_msgs.msg import NavSatFix, NavSatStatus
 from geographic_msgs.msg import GeoPointStamped
 from mavros_msgs.msg import State, ExtendedState
 from geometry_msgs.msg import Pose, PoseStamped, Twist, Quaternion
-from mavros_msgs.srv import CommandBool, CommandBoolRequest, SetMode, SetModeRequest, CommandHome, SetHomeRequest
+from mavros_msgs.srv import CommandBool, CommandBoolRequest, SetMode, SetModeRequest, CommandHome, CommandHomeRequest
 
 class MavrospyController:
     """
@@ -188,7 +188,7 @@ class MavrospyController:
         rospy.loginfo("Setting home position...")
 
         # Set the current GPS position as home
-        self.service_request(self.set_home_service, SetHomeRequest(current_gps=True, latitude=0, longitude=0, altitude=0))
+        self.service_request(self.set_home_service, CommandHomeRequest(current_gps=True, latitude=0, longitude=0, altitude=0))
         rospy.loginfo("Home position set.")
 
     def arm(self, status, timeout=5):
