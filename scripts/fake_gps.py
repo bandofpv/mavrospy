@@ -5,6 +5,11 @@ import tf2_ros
 from geometry_msgs.msg import PoseStamped, TransformStamped
 
 def pose_callback(pose_msg):
+    """
+    Callback function for the mocap pose subscriber
+
+    Converts the mocap pose to a TransformStamped message and publishes it to the /mavros/fake_gps/mocap/tf topic
+    """
     # Create a TransformStamped message
     t = TransformStamped()
 
@@ -27,14 +32,13 @@ def pose_callback(pose_msg):
     tf_pub.publish(t)
 
 def main():
-    rospy.init_node('mocap_to_tf_publisher')
+    rospy.init_node('pose_to_tf_node')
+
+    # Subscribe to the /mavros/vision_pose/pose topic
+    rospy.Subscriber('/mavros/vision_pose/pose', PoseStamped, pose_callback)
 
     # Publisher to the /mavros/fake_gps/mocap/tf topic
-    global tf_pub
     tf_pub = rospy.Publisher('/mavros/fake_gps/mocap/tf', TransformStamped, queue_size=10)
-
-    # Subscribe to the mocap pose topic
-    rospy.Subscriber('/mavros/vision_pose/pose', PoseStamped, pose_callback)
 
     rospy.spin()
 

@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <launch>
-	<arg name="fcu_url" />
+<arg name="fcu_url" default="/dev/serial0:921600" />
 
-	<!-- Include the MAVROS px4 node -->
-	<include file="$(find mavros)/launch/px4.launch">
-		<arg name="fcu_url" value="$(arg fcu_url)" />
-	</include>
+  <!-- Include the MAVROS px4 node -->
+  <include file="$(find mavros)/launch/px4.launch">
+    <arg name="fcu_url" value="$(arg fcu_url)" />
+  </include>
 
-	<!-- Our node to control the drone -->
-	<node pkg="mavrospy" type="outdoor_square.py" name="mavrospy" required="true" output="screen" />
+  <!-- Our node to control the drone -->
+  <node pkg="mavrospy" type="outdoor_square.py" name="mavrospy" required="true" output="screen" />
 </launch>

@@ -13,7 +13,7 @@ class PoseToPathNode:
 
         # Initialize the Path message
         self.path = Path()
-        self.path.header.frame_id = "map"  
+        self.path.header.frame_id = "map"
 
         # Subscriber to PoseStamped
         self.pose_sub = rospy.Subscriber('/mavros/local_position/pose', PoseStamped, self.pose_callback)

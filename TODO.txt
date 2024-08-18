@@ -10,6 +10,6 @@ Setup Jetson Nano 2GB
 
 Intel Camera --> rosbag
 
-Add mocap argument for control node
-
 Clean up arm method log messaging (to much?)
+
+Add jetson docker

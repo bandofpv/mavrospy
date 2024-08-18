@@ -11,7 +11,9 @@
   <!-- ACTION REQUIRED: Replace My_Quad with the name of your rigid body -->
   <node pkg="topic_tools" type="relay" name="relay" output="screen" args="/qualisys/My_Quad/pose /mavros/vision_pose/pose"/>
 
-  <!-- Launch MAVROSPY and Fake GPS node -->
-  <node pkg="mavrospy" type="fake_gps.py" name="mocap_to_tf" required="true" output="screen"/>
-  <node pkg="mavrospy" type="mocap.py" name="mavrospy" required="true" output="screen"/>
+  <!-- Launch MAVROSPY control node and Fake GPS node -->
+  <node pkg="mavrospy" type="fake_gps.py" name="pose_to_tf" required="true" output="screen"/>
+  <node pkg="mavrospy" type="mocap.py" name="control_node" required="true" output="screen">
+    <param name="vision" value="true"/>
+  </node>
 </launch>

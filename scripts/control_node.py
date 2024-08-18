@@ -14,7 +14,11 @@ class MavrospyController:
     """
     def __init__(self, frequency):
         # Initialize our control node
-        rospy.init_node("mavrospy_node")
+        rospy.init_node("mavrospy_control_node")
+
+        # Get mocap argument
+        self.vision = rospy.get_param("~vision", False)
+        print("Vision: ", self.vision)
 
         # Create subscribers
         rospy.Subscriber("/mavros/state", State, self.state_callback)
@@ -50,10 +54,11 @@ class MavrospyController:
         self.origin_set = False
         self.current_gps = None
 
-        # Set global origin and home position
-        self.set_global_origin()
-        self.wait_for_gps_fix()
-        self.set_home_position()
+        # If using vision set global origin and home position
+        if self.vision:
+            self.set_global_origin()
+            self.wait_for_gps_fix()
+            self.set_home_position()
 
         self.log_info("MavrospyController Initiated")
 
