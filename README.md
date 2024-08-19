@@ -279,6 +279,7 @@ If you wish to use a motion caputure system as your means for navigating with ou
     EKF2_RNG_CTRL = Disable range fusion
     EKF2_REQ_NSATS = 5
     MAV_USEHILGPS = Enabled
+    EKF2_MAG_TYPE = None
 ```
 
 ### Timesync

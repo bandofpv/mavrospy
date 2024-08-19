@@ -34,9 +34,9 @@ def move():
     c = MavrospyController(rate)  # create mavrospy controller instance
 
     min_height = 1.0  # min height to fly at
-    max_height = 6.0  # max height to fly at
-    width = 10.0  # width of the figure-eight pattern
-    length = 5.0  # length of the figure-eight pattern
+    max_height = 3.0  # max height to fly at
+    width = 3.0  # width of the figure-eight pattern
+    length = 3.0  # length of the figure-eight pattern
     levels = 3  # number of different altitudes to complete figure-eight pattern
     repetitions = 3  # number of times to repeat the figure-eight pattern at each altitude
 

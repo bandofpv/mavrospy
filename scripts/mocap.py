@@ -14,8 +14,8 @@ def simple_demo():
     rate = 20
 
     c = MavrospyController(rate)
-    alt = 2.0
-    side = 4.0
+    alt = 3.0
+    side = 3.0
 
     while not rospy.is_shutdown():
         if c.current_state.mode == "OFFBOARD":

@@ -10,10 +10,6 @@ Setup Jetson Nano 2GB
 
 Intel Camera --> rosbag
 
-Clean up arm method log messaging (to much?)
+Clean up arm method log messaging (too much?)
 
 Add jetson docker
-
-Check if modified fake gps works
-
-Check size parameters for mocap

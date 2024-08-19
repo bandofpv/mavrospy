@@ -33,8 +33,8 @@ def move():
     c = MavrospyController(rate)  # create mavrospy controller instance
 
     min_height = 1.0  # min height to fly at
-    max_height = 6.0  # max height to fly at
-    width = 5.0  # width of the circle pattern
+    max_height = 3.0  # max height to fly at
+    width = 3.0  # width of the circle pattern
     levels = 3  # number of different altitudes to complete circle pattern
     repetitions = 3   # number of times to repeat the circle pattern at each altitude
     radius = width / 2 #radius of circle pattern
