@@ -7,7 +7,7 @@ from control_node import MavrospyController
 
 def fly_spiral(c, min_radius, max_radius, min_height, max_height, final_radius, resolution=180):
     """
-    Fly in a spiral pattern facing only in forward direction
+    Fly in a spiral pattern facing direction of motion
     """
     # Calculate step size for radius and height
     radius_step = (max_radius - min_radius) / resolution
@@ -26,7 +26,18 @@ def fly_spiral(c, min_radius, max_radius, min_height, max_height, final_radius, 
         x += final_radius
         y += final_radius
 
-        c.goto_xyz_rpy(x, y, altitude, 0, 0, 0, 1/20, isClose=False)  # move
+        # calculate next point on circle
+        next_theta = 2 * math.pi * (i + 1) / resolution
+        next_x = radius * math.cos(next_theta)
+        next_y = radius * math.sin(next_theta)
+
+        # Account for center offset
+        next_x += final_radius
+        next_y += final_radius
+
+        yaw = math.atan2(next_y - y, next_x - x) - math.pi/2  # calculate yaw to face forward along the path
+
+        c.goto_xyz_rpy(x, y, altitude, 0, 0, yaw, 1/20, isClose=False)  # move
 
     c.log_info("Spiral Pattern Complete")
 

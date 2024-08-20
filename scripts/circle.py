@@ -35,9 +35,9 @@ def move():
     min_height = 1.0  # min height to fly at
     max_height = 3.0  # max height to fly at
     width = 3.0  # width of the circle pattern
+    radius = width / 2  # radius of circle pattern
     levels = 3  # number of different altitudes to complete circle pattern
-    repetitions = 3   # number of times to repeat the circle pattern at each altitude
-    radius = width / 2 #radius of circle pattern
+    repetitions = 3  # number of times to repeat the circle pattern at each altitude
 
     # Create list of different altitudes to fly from min to max height and number of levels
     altitudes = [min_height + (max_height - min_height) * l / (levels-1) for l in range(levels)]
