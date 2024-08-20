@@ -22,9 +22,9 @@ def move():
     c = MavrospyController(rate)
 
     min_height = 1.0    # minimum height
-    max_height = 10.0   # maximum height
-    min_radius = 5.0    # minimum radius
-    max_radius = 5.0   # maximum radius
+    max_height = 3.0   # maximum height
+    min_radius = 0.0    # minimum radius
+    max_radius = 3.0   # maximum radius
     resolution = 360    # number of steps for smoothness
     levels = 10  # number different altitudes to complete spiral pattern
 
@@ -39,11 +39,11 @@ def move():
     c.takeoff(min_height)
 
     # Create list of different altitudes to fly from min to max height and number of levels
-    step = (max_height - min_height) / (levels - 1)
-    altitudes = [min_height + i * step for i in range(levels)]
+    altitudes = [min_height + (max_height - min_height) * l / (levels-1) for l in range(levels)]
+    radii = [min_radius + (max_radius - min_radius) * l / (levels-1) for l in range(levels)]
 
     for i in range(len(altitudes)-1):
-        fly_spiral(c, min_radius, max_radius, altitudes[i], altitudes[i+1], resolution)
+        fly_spiral(c, radii[i], radii[i+1], altitudes[i], altitudes[i+1], resolution)
 
     c.goto_xyz_rpy(0, 0, min_height, 0, 0, 0)
     c.log_info("Landing")

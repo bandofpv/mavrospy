@@ -40,7 +40,7 @@ def move():
     repetitions = 3   # number of times to repeat the square pattern at each altitude
 
     # Create list of different altitudes to fly from min to max height and number of levels
-    altitudes = [min_height + (max_height - min_height) * l / levels for l in range(1, levels+1)]
+    altitudes = [min_height + (max_height - min_height) * l / (levels-1) for l in range(levels)]
 
     # Wait until drone is in OFFBOARD mode
     while not rospy.is_shutdown():
