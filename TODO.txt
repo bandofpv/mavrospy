@@ -5,6 +5,8 @@ Record outside square
 
 Intel Camera --> rosbag
 
+Create launch file for VSLAM on orin nano and maybe laptop
+
 Clean up arm method log messaging (too much?)
 
 Add jetson docker

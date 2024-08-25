@@ -35,8 +35,8 @@ def move():
 
     min_height = 1.0  # min height to fly at
     max_height = 3.0  # max height to fly at
-    width = 3.0  # width of the figure-eight pattern
-    length = 3.0  # length of the figure-eight pattern
+    width = 4.0  # width of the figure-eight pattern
+    length = 2.5  # length of the figure-eight pattern
     levels = 3  # number of different altitudes to complete figure-eight pattern
     repetitions = 3  # number of times to repeat the figure-eight pattern at each altitude
 
