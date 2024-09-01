@@ -3,3 +3,5 @@ Record outside square
 Create launch file for VSLAM on orin nano and maybe laptop
 
 Clean up arm method log messaging (too much?)
+
+UPDATE: README.md by refering to companion computer instead of RPi4!!!

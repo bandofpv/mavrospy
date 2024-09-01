@@ -1,28 +1,29 @@
 # mavrospy
-ROS node to interact with [MAVROS](https://wiki.ros.org/mavros) for basic UAV control.
+ROS1 node to interact with [MAVROS](https://wiki.ros.org/mavros) for basic UAV control.
 
-This current repo is supported on a PX4 flight controller with a RPi4 companion computer running Ubuntu 22.04 MATE with ROS Noetic.
+This current repo is supported on a PX4 (v1.14.3) flight controller with a RPi4 (Ubuntu 22.04 MATE) or Jetson Nano (JetPack 4.6) companion computer.
 
 Documentation for motion capture utilizes the [Qualisys Track Manager]("https://www.qualisys.com/software/qualisys-track-manager/").
 
 ### Setup:
-This repository is supported on ROS Noetic. If you haven't already, please install [Ubuntu MATE 22.04](https://releases.ubuntu-mate.org/22.04/arm64/) for the RPi4 (arm64) using the [Raspberry Pi Imager](https://www.raspberrypi.com/software/). 
+This repository is supported on ROS Noetic.
+
+If you haven't already, please install [Ubuntu MATE 22.04](https://releases.ubuntu-mate.org/22.04/arm64/) for the RPi4 (arm64) or [JetPack 4.6](https://developer.nvidia.com/embedded/jetpack-sdk-46) using the [Raspberry Pi Imager](https://www.raspberrypi.com/software/).
 
 Select the `Log in automatically` option upon first boot.
 
 ### Wiring
 
-This setup connects the RPi4 to the flight controller's `TELEM2` port, which is generally recommended for offboard 
-control.
+This tutorial uses the flight controller's `TELEM2` port to communicate with the companion computer.
 
-Connect the flight controller's `TELEM2` `TX`/`RX`/`GND` pins to the complementary `RXD`/`TXD`/`Ground` pins on the RPi4 
-GPIO board:
+RPi 4:
+
+Connect the flight controller's `TELEM2` `TX`/`RX` pins to the complementary `RXD`/`TXD` pins on the RPi4 GPIO board:
 
 | PX4 TELEM2 Pin | RPi4 GPIO Pin          |
 |----------------|------------------------|
 | UART5_TX (2)   | RXD (GPIO 15 - pin 10) |
 | UART5_RX (3)   | TXD (GPIO 14 - pin 8)  |
-| GND (6)        | Ground (pin 6)         |
 
 This diagram shows the RPi4 GPIO board pinout:
 
@@ -39,10 +40,32 @@ The standard `TELEM2` pin assignments are shown below:
 | 5 (Black) | UART5_RTS (in)  | +3.3V   |
 | 6 (Black) | GND             | GND     |
 
-The RPi4 requires a separate 5V/3A power supply via the `5V power` and `Ground` pins. I would recommend soldering a 
-battery elimination circuit (BEC) to your UAV's power leads.
+The RPi4 requires a separate 5V/3A power supply via the `5V power` (pin 4) and `Ground` (pin 6). I would recommend soldering a battery elimination circuit (BEC) or Polulu voltage regulator to your UAV's power leads.
 
-### TODO: Diode for uart pin?? or just wait to plug in after full boot
+Jetson Nano:
+
+The Jetson Nano should theoretically be able to communicate with the flight controller via the GPIO pins. However upon testing, the Jetson Nano struggled to communicate with the flight controller due to possibly a noisy data link. I would recommend using a USB to UART adapter to communicate with the flight controller.
+
+Connect the flight controller's `TELEM2` `TX`/`RX` pins to the complementary `RXD`/`TXD` pins on the USB to UART adapter:
+
+| PX4 TELEM2 Pin | USB To UART Adapter Pin |
+|----------------|-------------------------|
+| UART5_TX (2)   | RXD                     |
+| UART5_RX (3)   | TXD                     |
+| GND (6)        | Ground                  |
+
+The standard `TELEM2` pin assignments are shown below:
+
+| Pins      | Signal          | Voltage |
+|-----------|-----------------|---------|
+| 1 (Red)   | VCC (out)       | +5V     |
+| 2 (Black) | UART5_TX (out)  | +3.3V   |
+| 3 (Black) | UART5_RX (in)   | +3.3V   |
+| 4 (Black) | UART5_CTS (out) | +3.3V   |
+| 5 (Black) | UART5_RTS (in)  | +3.3V   |
+| 6 (Black) | GND             | GND     |
+
+The Jetson Nano requires a separate 5V/3A power supply via the `5V power` and `Ground` pins. I would recommend soldering a battery elimination circuit (BEC) or Polulu voltage regulator to your UAV's power leads.
 
 ### PX4 Parameters
 
@@ -95,7 +118,7 @@ $ echo $USER
 
 We can now issue commands to our RPi via SSH rather than having it hooked up to a monitor with a mouse and keyboard.
 
-### Enable UART Communication
+### Enable UART Communication (RPi4 Only)
 
 Open the firmware boot configuration file:
 
@@ -133,7 +156,7 @@ The result of the command should include the RX/TX connection `/dev/serial0`
 [MAVLink](https://mavlink.io/en/) is the default and stable communication interface for working with PX4.
 
 
-We can test that the RPi and flight controller are communicating with each other via a MAVLink GCS called `mavproxy`.
+We can test that the companion computer and flight controller are communicating with each other via a MAVLink GCS called `mavproxy`.
 
 Install MAVProxy:
 
