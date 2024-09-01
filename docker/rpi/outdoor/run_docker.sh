@@ -64,4 +64,4 @@ fi
 
 # Run docker container
 echo "Running $IMAGE_NAME:$IMAGE_TAG."
-docker run -it --rm --name $CONTAINER_NAME --device=/dev/serial0 --net=host $IMAGE_NAME:$IMAGE_TAG
+docker run --restart=always --name $CONTAINER_NAME --device=/dev/serial0 $IMAGE_NAME:$IMAGE_TAG
