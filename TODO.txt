@@ -1,4 +1,0 @@
-Record outside square
-
-Create launch file for VSLAM on orin nano and maybe laptop
-

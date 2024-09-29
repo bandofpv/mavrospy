@@ -11,12 +11,15 @@ class PoseToPathNode:
     def __init__(self):
         rospy.init_node('pose_to_path')
 
+        # Get the topic name from the parameter server
+        topic = rospy.get_param('~topic', '/mavros/local_position/pose')
+
         # Initialize the Path message
         self.path = Path()
         self.path.header.frame_id = "map"
 
         # Subscriber to PoseStamped
-        self.pose_sub = rospy.Subscriber('/mavros/local_position/pose', PoseStamped, self.pose_callback)
+        self.pose_sub = rospy.Subscriber(topic, PoseStamped, self.pose_callback)
 
         # Publisher for the Path
         self.path_pub = rospy.Publisher('/path', Path, queue_size=10)
