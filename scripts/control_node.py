@@ -1,6 +1,7 @@
 import tf
 import math
 import rospy
+import numpy as np
 from pymavlink import mavutil
 from sensor_msgs.msg import NavSatFix, NavSatStatus
 from geographic_msgs.msg import GeoPointStamped
@@ -253,7 +254,7 @@ class MavrospyController:
         except rospy.ROSException as e:
             self.log_error(e)
 
-    def goto_xyz_rpy(self, x, y, z, roll, pitch, yaw, timeout=30, isClose=True, checkMode=True):
+    def goto_xyz_rpy(self, x, y, z, roll, pitch, yaw, timeout=30, isClose=True, checkMode=True, slow=False):
         """
         Sets the given pose as a next set point for given timeout (seconds).
 
@@ -284,19 +285,51 @@ class MavrospyController:
                 self.is_close(quaternion[1], self.pose.orientation.y, 0.1, True) and
                 self.is_close(quaternion[2], self.pose.orientation.z, 0.1, True) and
                 self.is_close(quaternion[3], self.pose.orientation.w, 0.1, True)):
+                    if (slow):
+                        break
                     self.log_info("Reached target position")
                     break
 
             self.pause()
 
-    def takeoff(self, height, timeout=30):
+    def slow_goto_xyz_rpy(self, target_x, target_y, target_z, target_roll, target_pitch, target_yaw, height=False, steps=90):
+        """
+        Move the drone slowly to a target position and orientation
+
+        steps: number of increments to reach the target
+        """
+
+        # Convert current orientation to euler angles
+        current_quaternion = [self.pose.orientation.x, self.pose.orientation.y, self.pose.orientation.z, self.pose.orientation.w]
+        (current_roll, current_pitch, current_yaw) = tf.transformations.euler_from_quaternion(current_quaternion)
+
+        # Generate incremental steps for smooth movement
+        step_x = np.linspace(self.pose.position.x, target_x, steps)
+        step_y = np.linspace(self.pose.position.y, target_y, steps)
+        step_z = np.linspace(self.pose.position.z, target_z, steps)
+        step_yaw = np.linspace(current_yaw - self.pi_2, target_yaw, steps)
+
+        # Don't rotate if yaw is within 0.2 rad
+        tolerance = 0.2
+        if abs(target_yaw - current_yaw - self.pi_2) < tolerance or abs(target_yaw + current_yaw - self.pi_2) < tolerance:
+            step_yaw = np.linspace(target_yaw, target_yaw, steps)
+
+        # Move in small steps
+        for i in range(steps):
+            if height:
+                self.goto_xyz_rpy(target_x, target_y, step_z[i], target_roll, target_pitch, step_yaw[i], 1/20, isClose=False, slow=True)
+            self.goto_xyz_rpy(step_x[i], step_y[i], target_z, target_roll, target_pitch, step_yaw[i], 1/20, isClose=False, slow=True)
+        
+        self.log_info("Reached target position")
+
+    def takeoff(self, height):
         """
         Arm the throttle and takeoff to given height (feet)
         """
         self.arm(True)  # arm throttle
 
         self.log_info("Taking Off")
-        self.goto_xyz_rpy(0, 0, height, 0, 0, 0, timeout)  # takeoff
+        self.slow_goto_xyz_rpy(0, 0, height, 0, 0, 0, height=True)  # takeoff
 
     def land(self):
         """

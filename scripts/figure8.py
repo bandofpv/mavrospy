@@ -57,10 +57,10 @@ def move():
     c.takeoff(altitudes[0])
 
     # Go to center of figure-eight pattern
-    c.goto_xyz_rpy(width/2, length/2, altitudes[0], 0, 0, 0)
+    c.slow_goto_xyz_rpy(width/2, length/2, altitudes[0], 0, 0, 0)
 
     # Go to first point on figure-eight pattern
-    c.goto_xyz_rpy(width, length/2, altitudes[0], 0, 0, 0)
+    c.slow_goto_xyz_rpy(width, length/2, altitudes[0], 0, 0, 0)
 
     # Fly figure-eight pattern at all altitudes
     for altitude in altitudes:
@@ -69,7 +69,7 @@ def move():
             fly_figure_eight(c, width, length, altitude)
 
     # Go back home
-    c.goto_xyz_rpy(0, 0, altitudes[0], 0, 0, 0)
+    c.slow_goto_xyz_rpy(0, 0, altitudes[0], 0, 0, 0, height=True)
 
     # Land
     c.log_info("Landing")

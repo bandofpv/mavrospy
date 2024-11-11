@@ -66,14 +66,14 @@ def move():
     c.takeoff(altitudes[0])
 
     # Go to center of spiral pattern
-    c.goto_xyz_rpy(max_radius, max_radius, altitudes[0], 0, 0, 0)
+    c.slow_goto_xyz_rpy(max_radius, max_radius, altitudes[0], 0, 0, 0)
 
     # Fly spiral pattern at all altitudes and radii
     for i in range(len(altitudes)-1):
         fly_spiral(c, radii[i], radii[i+1], altitudes[i], altitudes[i+1], max_radius, resolution)
 
     # Go back home
-    c.goto_xyz_rpy(0, 0, altitudes[0], 0, 0, 0)
+    c.slow_goto_xyz_rpy(0, 0, altitudes[0], 0, 0, 0, height=True)
 
     # Land
     c.log_info("Landing")

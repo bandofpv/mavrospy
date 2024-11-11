@@ -10,17 +10,17 @@ def fly_square(c, width, altitude):
     Fly in a square pattern facing in direction of motion
     """
     c.log_info("Waypoint 1")
-    c.goto_xyz_rpy(0.0, 0.0, altitude, 0, 0, -1 * c.pi_2)
-    c.goto_xyz_rpy(width, 0.0, altitude, 0, 0, -1 * c.pi_2)
+    c.slow_goto_xyz_rpy(0.0, 0.0, altitude, 0, 0, -1 * c.pi_2)
+    c.slow_goto_xyz_rpy(width, 0.0, altitude, 0, 0, -1 * c.pi_2)
     c.log_info("Waypoint 2")
-    c.goto_xyz_rpy(width, 0.0, altitude, 0, 0, 0)
-    c.goto_xyz_rpy(width, width, altitude, 0, 0, 0)
+    c.slow_goto_xyz_rpy(width, 0.0, altitude, 0, 0, 0)
+    c.slow_goto_xyz_rpy(width, width, altitude, 0, 0, 0)
     c.log_info("Waypoint 3")
-    c.goto_xyz_rpy(width, width, altitude, 0, 0, c.pi_2)
-    c.goto_xyz_rpy(0.0, width, altitude, 0, 0, c.pi_2)
+    c.slow_goto_xyz_rpy(width, width, altitude, 0, 0, c.pi_2)
+    c.slow_goto_xyz_rpy(0.0, width, altitude, 0, 0, c.pi_2)
     c.log_info("Waypoint 4")
-    c.goto_xyz_rpy(0.0, width, altitude, 0, 0, 2 * c.pi_2)
-    c.goto_xyz_rpy(0.0, 0.0, altitude, 0, 0, 2 * c.pi_2)
+    c.slow_goto_xyz_rpy(0.0, width, altitude, 0, 0, 2 * c.pi_2)
+    c.slow_goto_xyz_rpy(0.0, 0.0, altitude, 0, 0, 2 * c.pi_2)
     c.log_info("Square Pattern Complete")
 
 
@@ -37,7 +37,7 @@ def move():
     max_height = 3.0  # max height to fly at
     width = 3.0  # width of the square pattern
     levels = 3  # number of different altitude to complete square pattern
-    repetitions = 3   # number of times to repeat the square pattern at each altitude
+    repetitions = 1   # number of times to repeat the square pattern at each altitude
 
     # Create list of different altitudes to fly from min to max height and number of levels
     altitudes = [min_height + (max_height - min_height) * l / (levels-1) for l in range(levels)]

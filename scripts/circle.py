@@ -56,10 +56,10 @@ def move():
     c.takeoff(altitudes[0])
 
     # Go to center of circle
-    c.goto_xyz_rpy(radius, radius, altitudes[0], 0, 0, 0)
+    c.slow_goto_xyz_rpy(radius, radius, altitudes[0], 0, 0, 0)
 
     # Go to first point on circle
-    c.goto_xyz_rpy(radius*2, radius, altitudes[0], 0, 0, 0)
+    c.slow_goto_xyz_rpy(radius*2, radius, altitudes[0], 0, 0, 0)
 
     # Fly circle pattern at all altitudes
     for altitude in altitudes:
@@ -68,7 +68,7 @@ def move():
             fly_circle(c, radius, altitude)
 
     # Go back home
-    c.goto_xyz_rpy(0, 0, altitudes[0], 0, 0, 0)
+    c.slow_goto_xyz_rpy(0, 0, altitudes[0], 0, 0, 0, height=True)
 
     # Land
     c.log_info("Landing")
