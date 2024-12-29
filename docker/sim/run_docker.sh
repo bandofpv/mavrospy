@@ -64,4 +64,4 @@ fi
 
 # Run docker container
 echo "Running $IMAGE_NAME:$IMAGE_TAG."
-docker run -it --rm --net=host --name $CONTAINER_NAME --runtime=nvidia --gpus all -e NVIDIA_VISIBLE_DEVICES=all -e NVIDIA_DRIVER_CAPABILITIES=all -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix $IMAGE_NAME:$IMAGE_TAG
+docker run -it --rm --net=host --name $CONTAINER_NAME --runtime=nvidia --gpus all -e __NV_PRIME_RENDER_OFFLOAD=1 -e __GLX_VENDOR_LIBRARY_NAME=nvidia -e NVIDIA_VISIBLE_DEVICES=all -e NVIDIA_DRIVER_CAPABILITIES=all -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix $IMAGE_NAME:$IMAGE_TAG
