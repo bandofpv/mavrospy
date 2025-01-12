@@ -47,7 +47,7 @@ WORKDIR /home/jetson/catkin_ws/src
 RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && catkin_init_workspace"
 
 # Clone MAVROSPY repo
-RUN git clone https://github.com/bandofpv/mavrospy.git
+RUN git clone -b ros1 https://github.com/bandofpv/mavrospy.git
 
 # Install ROS package dependencies
 WORKDIR /home/jetson/catkin_ws
