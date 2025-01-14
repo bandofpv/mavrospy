@@ -7,7 +7,7 @@
   <maintainer email="andrewrbernas@gmail.com">Andrew Bernas</maintainer>
   <license>MIT</license>
 
-  <depend>tf</depend>
+  <depend>tf2</depend>
   <depend>rclpy</depend>
   <depend>std_msgs</depend>
   <depend>geometry_msgs</depend>
