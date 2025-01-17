@@ -319,7 +319,7 @@ class MavrospyController:
             if height:
                 self.goto_xyz_rpy(target_x, target_y, step_z[i], target_roll, target_pitch, step_yaw[i], 1/20, isClose=False, slow=True)
             self.goto_xyz_rpy(step_x[i], step_y[i], target_z, target_roll, target_pitch, step_yaw[i], 1/20, isClose=False, slow=True)
-        
+
         self.log_info("Reached target position")
 
     def takeoff(self, height):
