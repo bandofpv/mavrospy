@@ -87,7 +87,7 @@ class MavrospyController:
         Callback for global origin data
         """
         # Check if global origin is set properly
-        if data.position.latitude == self.target_lat and data.position.longitude == self.target_lon:
+        if (data.position.latitude == self.target_lat and data.position.longitude == self.target_lon) or not self.vision:
             self.origin_set = True
         else:
             rospy.logwarn("Global origin mismatch: Expected (%.6f, %.6f) but got (%.6f, %.6f)",

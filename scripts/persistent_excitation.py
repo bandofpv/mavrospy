@@ -1,6 +1,5 @@
 #! /usr/bin/env python3
 
-import tf
 import time
 import rospy
 import random
@@ -16,11 +15,11 @@ def move():
     c = MavrospyController(rate)  # create mavrospy controller instance
 
     # Set center position
-    center_position = [1.5, 1.5, 2]  # X, Y, Z in meters
+    center_position = [1.5, 1.5, 1.5]  # X, Y, Z in meters
 
-    # Oscillation bounds
-    position_bounds = 1.25  # ±1.25m in X and Y
-    altitude_bounds = 1  # ±1m from hover altitude
+    # Movement bounds
+    position_bounds = 1  # ±1m in X and Y
+    altitude_bounds = 0.5  # ±0.5m from start altitude
     orientation_bounds = 1  # ±1 radians
 
     # Flight time
@@ -36,24 +35,24 @@ def move():
         c.goto_xyz_rpy(0, 0, 0, 0, 0, 0, 1, False, False)
 
     # Takeoff
-    c.log_info(f"Takeoff: 2m")
-    c.takeoff(2)
+    c.log_info(f"Takeoff: {center_position[2]}m")
+    c.takeoff(center_position[2])
 
     # Go to center
     c.log_info("Going to center...")
-    c.goto_xyz_rpy(center_position[0], center_position[1], center_position[2], 0, 0, 0)
+    c.slow_goto_xyz_rpy(center_position[0], center_position[1], center_position[2], 0, 0, 0)
 
     # Start timer
     start_time = time.time()
 
-    c.log_info("PE Start!")
+    c.log_info("Start persistent excitation")
 
     while not rospy.is_shutdown() and time.time() - start_time < flight_time:
         # Generate random target position and orientation
         target_x = center_position[0] + random.uniform(-position_bounds, position_bounds)
         target_y = center_position[1] + random.uniform(-position_bounds, position_bounds)
         target_z = center_position[2] + random.uniform(-altitude_bounds, altitude_bounds)
-        target_yaw = hover_orientation[2] + random.uniform(-orientation_bounds, orientation_bounds)
+        target_yaw = random.uniform(-orientation_bounds, orientation_bounds)
 
         # Go to target position and orientation
         c.goto_xyz_rpy(target_x, target_y, target_z, 0, 0, target_yaw, timeout=1, isClose=False)

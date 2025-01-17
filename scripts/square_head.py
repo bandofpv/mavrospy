@@ -1,6 +1,5 @@
 #! /usr/bin/env python3
 
-import tf
 import rospy
 from control_node import MavrospyController
 
