@@ -55,7 +55,7 @@ def move():
         target_yaw = random.uniform(-orientation_bounds, orientation_bounds)
 
         # Go to target position and orientation
-        c.goto_xyz_rpy(target_x, target_y, target_z, 0, 0, target_yaw, timeout=1, isClose=False)
+        c.goto_xyz_rpy(target_x, target_y, target_z, 0, 0, target_yaw)
 
     # Land
     c.log_info("Landing")
