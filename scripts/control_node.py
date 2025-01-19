@@ -29,7 +29,7 @@ class MavrospyController:
 
         # Create publishers
         self.cmd_pos_pub = rospy.Publisher("/mavros/setpoint_position/local", PoseStamped, queue_size=1)
-        self.origin_pub = rospy.Publisher('/mavros/global_position/set_gp_origin', GeoPointStamped, queue_size=10)
+        self.origin_pub = rospy.Publisher('/mavros/global_position/set_gp_origin', GeoPointStamped, queue_size=1)
 
         # Create services
         self.mode_service = rospy.ServiceProxy('/mavros/set_mode', SetMode)
