@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'offb_node_py = mavrospy.offb_node:main', 
+            'offb_node_py = mavrospy.offb_node:main',
+            'square_py = mavrospy.square:main',
         ],
     },
 )

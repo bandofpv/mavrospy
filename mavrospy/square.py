@@ -2,20 +2,21 @@
 
 import rclpy
 from rclpy.node import Node
-from mavrospy_controller import MavrospyController
+from mavrospy.control_node import MavrospyController
 
 def fly_square(controller, width, altitude):
     """
     Fly in a square pattern facing only in the forward direction.
     """
+# CHANGE TO SLOWWWWWWWWWWWWW
     controller.get_logger().info("Waypoint 1")
-    controller.slow_goto_xyz_rpy(width, 0.0, altitude, 0, 0, 0)
+    controller.goto_xyz_rpy(width, 0.0, altitude, 0, 0, 0)
     controller.get_logger().info("Waypoint 2")
-    controller.slow_goto_xyz_rpy(width, width, altitude, 0, 0, 0)
+    controller.goto_xyz_rpy(width, width, altitude, 0, 0, 0)
     controller.get_logger().info("Waypoint 3")
-    controller.slow_goto_xyz_rpy(0.0, width, altitude, 0, 0, 0)
+    controller.goto_xyz_rpy(0.0, width, altitude, 0, 0, 0)
     controller.get_logger().info("Waypoint 4")
-    controller.slow_goto_xyz_rpy(0.0, 0.0, altitude, 0, 0, 0)
+    controller.goto_xyz_rpy(0.0, 0.0, altitude, 0, 0, 0)
     controller.get_logger().info("Square Pattern Complete")
 
 
