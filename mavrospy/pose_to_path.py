@@ -2,8 +2,9 @@
 
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Path
+from geometry_msgs.msg import PoseStamped
+from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy, DurabilityPolicy
 
 class PoseToPathNode(Node):
     """
@@ -20,27 +21,36 @@ class PoseToPathNode(Node):
         self.path = Path()
         self.path.header.frame_id = "map"
 
-        # Configure QoS profile for publishing and subscribing
-        qos_profile = QoSProfile(
+        # Configure QoS profile for subscribing to px4 topics
+        px4_qos_profile = QoSProfile(
             reliability=ReliabilityPolicy.BEST_EFFORT,
             durability=DurabilityPolicy.VOLATILE,
             history=HistoryPolicy.KEEP_LAST,
             depth=1
         )
 
-        # Subscriber to PoseStamped
+        # Configure QoS profile for publishing messages for rviz
+        rviz_qos_profile = QoSProfile(
+            reliability=ReliabilityPolicy.RELIABLE,
+            durability=DurabilityPolicy.VOLATILE,
+            history=HistoryPolicy.KEEP_LAST,
+            depth=1
+        )
+
+        # Subscriber to PoseStamped messages
         self.pose_sub = self.create_subscription(
             PoseStamped,
             topic,
             self.pose_callback,
-            qos_profile
+            px4_qos_profile
         )
 
-        # Publisher for the Path
-        self.path_pub = self.create_publisher(Path, '/path', qos_profile)
+        # Publisher for the Path and Pose messages
+        self.path_pub = self.create_publisher(Path, '/rviz/path', rviz_qos_profile)
+        self.pose_pub = self.create_publisher(PoseStamped, '/rviz/pose', rviz_qos_profile)
 
         self.get_logger().info(f"Subscribed to topic: {topic}")
-        self.get_logger().info("Publishing Path messages on /path")
+        self.get_logger().info("Publishing Pose messages on /rviz/pose and Path messages on /rviz/path")
 
     def pose_callback(self, msg: PoseStamped):
         """
@@ -52,7 +62,8 @@ class PoseToPathNode(Node):
         # Append the new pose to the path
         self.path.poses.append(msg)
 
-        # Publish the updated path
+        # Publish the updated pose and path
+        self.pose_pub.publish(msg)
         self.path_pub.publish(self.path)
 
 def main():

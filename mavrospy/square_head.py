@@ -64,9 +64,10 @@ def main():
     # Fly square patterns at each altitude
     for altitude in altitudes:
         controller.get_logger().info(f"Pattern Altitude: {altitude} meters")
-        controller.goto_xyz_rpy(0.0, 0.0, altitude, 0, 0, 0)  # reset to origin
+        controller.slow_goto_xyz_rpy(0.0, 0.0, altitude, 0, 0, -1 * controller.pi_2, height=True)  # reset to origin
         for r in range(repetitions):  # repeat square pattern
             fly_square(controller, width, altitude)
+        controller.slow_goto_xyz_rpy(0.0, 0.0, altitude, 0, 0, -1 * controller.pi_2) # reset to origin
 
     # Land
     controller.get_logger().info("Landing...")

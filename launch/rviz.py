@@ -20,7 +20,7 @@ def generate_launch_description():
         name='pose_to_path',
         output='screen',
         parameters=[{
-            'use_sim_time': use_sim_time,
+            'use_sim_time': LaunchConfiguration('use_sim_time'),
             'topic': '/mavros/local_position/pose'
         }]
     )
