@@ -8,8 +8,6 @@ def generate_launch_description():
             executable='square_py',
             name='square',
             output='screen',
-            parameters=[
-            ]
-        )
+       )
     ])
 

@@ -10,6 +10,8 @@ setup(
         ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/launch', ['launch/offb_launch.py']),
+        ('share/' + package_name + '/launch', ['launch/square_launch.py']),
+        ('share/' + package_name + '/launch', ['launch/gazebo_sim.py']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,

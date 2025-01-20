@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import rclpy
+import threading
 from rclpy.node import Node
 from mavrospy.control_node import MavrospyController
 
@@ -8,19 +9,18 @@ def fly_square(controller, width, altitude):
     """
     Fly in a square pattern facing only in the forward direction.
     """
-# CHANGE TO SLOWWWWWWWWWWWWW
     controller.get_logger().info("Waypoint 1")
-    controller.goto_xyz_rpy(width, 0.0, altitude, 0, 0, 0)
+    controller.slow_goto_xyz_rpy(width, 0.0, altitude, 0, 0, 0)
     controller.get_logger().info("Waypoint 2")
-    controller.goto_xyz_rpy(width, width, altitude, 0, 0, 0)
+    controller.slow_goto_xyz_rpy(width, width, altitude, 0, 0, 0)
     controller.get_logger().info("Waypoint 3")
-    controller.goto_xyz_rpy(0.0, width, altitude, 0, 0, 0)
+    controller.slow_goto_xyz_rpy(0.0, width, altitude, 0, 0, 0)
     controller.get_logger().info("Waypoint 4")
-    controller.goto_xyz_rpy(0.0, 0.0, altitude, 0, 0, 0)
+    controller.slow_goto_xyz_rpy(0.0, 0.0, altitude, 0, 0, 0)
     controller.get_logger().info("Square Pattern Complete")
 
 
-def move():
+def main():
     """
     Move UAV in a square pattern at given height and width for given
     repetitions and altitude levels.
@@ -30,6 +30,10 @@ def move():
     # Setpoint publishing MUST be faster than 2Hz
     rate = 20
     controller = MavrospyController(rate) # create mavrospy controller instance
+
+    # Spin controller node in a separate thread
+    thread = threading.Thread(target=rclpy.spin, args=(controller, ), daemon=True)
+    thread.start()
 
     min_height = 1.0  # min height to fly at
     max_height = 3.0  # max height to fly at
@@ -42,13 +46,12 @@ def move():
 
     # Wait until the drone is in OFFBOARD mode
     while rclpy.ok():
-        rclpy.spin_once(controller, timeout_sec=0.1)
         if controller.current_state.mode == "OFFBOARD":
             controller.get_logger().info("OFFBOARD mode enabled")
             break
 
         # Stream setpoints before entering OFFBOARD mode
-        controller.goto_xyz_rpy(0, 0, 0, 0, 0, 0, timeout=1, isClose=False, checkMode=False)
+        controller.goto_xyz_rpy(0.0, 0.0, 0.0, 0, 0, 0, timeout=1, isClose=False, checkMode=False)
 
     # Takeoff at the lowest altitude
     controller.get_logger().info(f"Takeoff: {altitudes[0]} meters")
@@ -68,8 +71,9 @@ def move():
     # Shutdown
     controller.destroy_node()
     rclpy.shutdown()
+    thread.join()
 
 
 if __name__ == "__main__":
-    move()
+    main()
 
