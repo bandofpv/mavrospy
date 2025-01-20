@@ -9,9 +9,10 @@ setup(
     data_files=[
         ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        ('share/' + package_name + '/launch', ['launch/offb_launch.py']),
-        ('share/' + package_name + '/launch', ['launch/square_launch.py']),
         ('share/' + package_name + '/launch', ['launch/gazebo_sim.py']),
+        ('share/' + package_name + '/launch', ['launch/outdoor.py']),
+        ('share/' + package_name + '/launch', ['launch/mocap.py']),
+        ('share/' + package_name + '/launch', ['launch/rviz.py']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -22,8 +23,17 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'offb_node_py = mavrospy.offb_node:main',
             'square_py = mavrospy.square:main',
+            'square_head_py = mavrospy.square_head:main',
+            'circle_py = mavrospy.circle:main',
+            'circle_head_py = mavrospy.circle_head:main',
+            'figure8_py = mavrospy.figure8:main',
+            'figure8_head_py = mavrospy.figure8_head:main',
+            'spiral_py = mavrospy.spiral:main',
+            'spiral_head_py = mavrospy.spiral_head:main',
+            'persistent_excitation_py = mavrospy.persistent_excitation:main',
+            'fake_gps_py = mavrospy.fake_gps:main',
+            'pose_to_path_py = mavrospy.pose_to_path:main',
         ],
     },
 )

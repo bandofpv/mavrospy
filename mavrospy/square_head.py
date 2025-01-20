@@ -6,17 +6,21 @@ from mavrospy.control_node import MavrospyController
 
 def fly_square(controller, width, altitude):
     """
-    Fly in a square pattern facing only in the forward direction.
+    Fly in a square pattern facing in direction of motion
     """
     controller.get_logger().info("Waypoint 1")
-    controller.slow_goto_xyz_rpy(width, 0.0, altitude, 0, 0, 0)
+    controller.slow_goto_xyz_rpy(0.0, 0.0, altitude, 0, 0, -1 * controller.pi_2)
+    controller.slow_goto_xyz_rpy(width, 0.0, altitude, 0, 0, -1 * controller.pi_2)
     controller.get_logger().info("Waypoint 2")
+    controller.slow_goto_xyz_rpy(width, 0.0, altitude, 0, 0, 0)
     controller.slow_goto_xyz_rpy(width, width, altitude, 0, 0, 0)
     controller.get_logger().info("Waypoint 3")
-    controller.slow_goto_xyz_rpy(0.0, width, altitude, 0, 0, 0)
+    controller.slow_goto_xyz_rpy(width, width, altitude, 0, 0, controller.pi_2)
+    controller.slow_goto_xyz_rpy(0.0, width, altitude, 0, 0, controller.pi_2)
     controller.get_logger().info("Waypoint 4")
-    controller.slow_goto_xyz_rpy(0.0, 0.0, altitude, 0, 0, 0)
-    controller.get_logger().info("Square pattern complete")
+    controller.slow_goto_xyz_rpy(0.0, width, altitude, 0, 0, 2 * controller.pi_2)
+    controller.slow_goto_xyz_rpy(0.0, 0.0, altitude, 0, 0, 2 * controller.pi_2)
+    controller.get_logger().info("Square head pattern complete")
 
 def main():
     """
@@ -37,7 +41,7 @@ def main():
     max_height = 3.0  # max height to fly at
     width = 3.0  # width of the square pattern
     levels = 3  # number of different altitudes to complete square pattern
-    repetitions = 2   # number of times to repeat the square pattern at each altitude
+    repetitions = 1   # number of times to repeat the square pattern at each altitude
 
     # Create list of different altitudes to fly from min to max height and number of levels
     altitudes = [min_height + (max_height - min_height) * l / (levels-1) for l in range(levels)]
@@ -55,7 +59,7 @@ def main():
     controller.get_logger().info(f"Takeoff: {altitudes[0]} meters")
     controller.takeoff(altitudes[0])
 
-    controller.get_logger().info("Starting square pattern...")
+    controller.get_logger().info("Starting square head pattern...")
 
     # Fly square patterns at each altitude
     for altitude in altitudes:

@@ -47,15 +47,6 @@ RUN make px4_sitl
 RUN pip install --user -U empy==3.3.4 pyros-genmsg setuptools packaging && \
     pip install --user -U transforms3d --upgrade
 
-# Set up Micro XRCE-DDS Agent & Client
-#WORKDIR /home/sim
-#RUN git clone https://github.com/eProsima/Micro-XRCE-DDS-Agent.git
-#WORKDIR /home/sim/Micro-XRCE-DDS-Agent/build
-#RUN cmake .. && \
-#    make -j$(nproc) && \
-#    sudo make install && \
-#    sudo ldconfig /usr/local/lib
-
 # Build ROS2 workspace with MAVROS and MAVROSPY
 WORKDIR /home/sim/ros2_ws/src
 RUN git clone -b ros2 https://github.com/bandofpv/mavrospy.git
@@ -69,35 +60,17 @@ RUN rosinstall_generator --format repos mavlink | tee /tmp/mavlink.repos && \
     sudo ./src/mavros/mavros/scripts/install_geographiclib_datasets.sh
 RUN /bin/bash -c "source /opt/ros/humble/setup.bash && colcon build"
 
-# DELETE LATER
+# Source ROS2 workspace in .bashrc
 RUN echo "source /opt/ros/humble/setup.bash" >> /home/sim/.bashrc && \
     echo "source /home/sim/ros2_ws/install/setup.bash" >> /home/sim/.bashrc && \
     echo "export ROS_DOMAIN_ID=1" >> /home/sim/.bashrc
 
-# 
-# # Clone MAVROSPY package
-# RUN git clone https://github.com/bandofpv/mavrospy.git
-# 
-# # Install ROS package dependencies
-# WORKDIR /home/sim/catkin_ws
-# RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && rosdep update" && \
-#     /bin/bash -c "source /opt/ros/noetic/setup.bash && rosdep install --from-paths src --ignore-src -r -y"
-# 
-# # Build the ROS workspace
-# RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && catkin_make"
-# 
-# # Add ROS Environment Setup to .bashrc
-# RUN echo "source /opt/ros/noetic/setup.bash" >> /home/sim/.bashrc && \
-#     echo "source /home/sim/catkin_ws/devel/setup.bash" >> /home/sim/.bashrc && \
-#     echo "source /home/sim/PX4-Autopilot/Tools/simulation/gazebo-classic/setup_gazebo.bash /home/sim/PX4-Autopilot /home/sim/PX4-Autopilot/build/px4_sitl_default" >> /home/sim/.bashrc && \
-#     echo "export ROS_PACKAGE_PATH=/home/sim/catkin_ws/src:/opt/ros/noetic/share:/home/sim/PX4-Autopilot:/home/sim/PX4-Autopilot/Tools/simulation/gazebo-classic/sitl_gazebo-classic" >> /home/sim/.bashrc
-# 
-# # Set WORKDIR to src directory and clean package list
-# WORKDIR /home/sim/catkin_ws/src/mavrospy
-# 
-# # Clean up
-# RUN sudo rm -rf /var/lib/apt/lists/*  && \
-#     sudo apt-get clean
+# Set woking directory to MAVROSPY
+WORKDIR /home/sim/ros2_ws/src/mavrospy
+
+# Clean up
+RUN sudo rm -rf /var/lib/apt/lists/*  && \
+    sudo apt-get clean
 
 # Set up entrypoint
 ENTRYPOINT ["/bin/bash"]

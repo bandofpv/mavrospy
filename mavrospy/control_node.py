@@ -339,18 +339,3 @@ class MavrospyController(Node):
             self.rate.sleep()
 
         self.arm(False)  # disarm throttle
-
-# def main():
-#     rclpy.init()
-#     node = MavrospyController(10)
-#     try:
-#         rclpy.spin(node)
-#     except KeyboardInterrupt:
-#         node.get_logger().info("Shutting down.")
-#     finally:
-#         node.destroy_node()
-#         rclpy.shutdown()
-# 
-# if __name__ == '__main__':
-#     main()
-# 
