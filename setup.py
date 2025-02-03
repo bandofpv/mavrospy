@@ -13,6 +13,7 @@ setup(
         ('share/' + package_name + '/launch', ['launch/mocap.py']),
         ('share/' + package_name + '/launch', ['launch/outdoor.py']),
         ('share/' + package_name + '/launch', ['launch/gazebo_sim.py']),
+        ('share/' + package_name + '/launch', ['launch/pegasus_sim.py']),
         ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
     ],
     install_requires=['setuptools'],

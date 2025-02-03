@@ -26,13 +26,6 @@ def generate_launch_description():
     # Path to the px4.launch file in MAVROS and PX4-Autopilot
     px4_launch_path = os.path.expanduser('~/ros2_ws/install/mavros/share/mavros/launch/px4.launch')
 
-    # Launch gazebo with the x500 model
-    gazebo = ExecuteProcess(
-        cmd=['make', 'px4_sitl', 'gz_x500'],
-        output='screen',
-        cwd=os.path.expanduser('~/PX4-Autopilot'),
-    )
-
     # Launch px4.launch with the fcu_url argument
     mavros_node = IncludeLaunchDescription(
         AnyLaunchDescriptionSource(px4_launch_path),
@@ -51,7 +44,6 @@ def generate_launch_description():
     return LaunchDescription([
         fcu_url_arg,
         pattern_arg,
-        gazebo,
         mavros_node,
         mavrospy_node
     ])
