@@ -1,9 +1,10 @@
+import os
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, TextSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
-from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.launch_description_sources import AnyLaunchDescriptionSource
 
 def generate_launch_description():
     # Declare the fcu_url argument
@@ -32,13 +33,21 @@ def generate_launch_description():
         launch_arguments={'fcu_url': LaunchConfiguration('fcu_url')}.items()
     ),
 
+    # Mocap pose conversion node
+    mocap_node = Node(
+        package='mavrospy',
+        executable='mocap_pose_py',
+        name='mocap_pose',
+        output='screen',
+    )
+
     # Relay node (from /qualisys/My_Quad/pose to /mavros/vision_pose/pose)
     relay_node = Node(
         package='topic_tools',
         executable='relay',
         name='relay_pose',
         output='screen',
-        arguments=['/qualisys/My_Quad/pose', '/mavros/vision_pose/pose']
+        arguments=['/quad_pose', '/mavros/vision_pose/pose']
     )
 
     # Fake GPS node
@@ -63,6 +72,7 @@ def generate_launch_description():
         pattern_arg,
         fcu_url_arg,
         mavros_node,
+        mocap_node,
         relay_node,
         fake_gps_node,
         mavrospy_node

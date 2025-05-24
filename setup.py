@@ -36,6 +36,7 @@ setup(
             'persistent_excitation_py = mavrospy.persistent_excitation:main',
             'fake_gps_py = mavrospy.fake_gps:main',
             'pose_to_path_py = mavrospy.pose_to_path:main',
+            'mocap_pose_py = mavrospy.mocap_pose:main',
         ],
     },
 )

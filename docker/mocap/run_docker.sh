@@ -64,4 +64,4 @@ fi
 
 # Run docker container
 echo "Running $IMAGE_NAME:$IMAGE_TAG."
-docker run -it --rm --net=host --name $CONTAINER_NAME $IMAGE_NAME:$IMAGE_TAG
+docker run -it --rm --privileged --net=host -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix --name $CONTAINER_NAME $IMAGE_NAME:$IMAGE_TAG

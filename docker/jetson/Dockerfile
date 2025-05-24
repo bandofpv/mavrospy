@@ -50,9 +50,10 @@ USER jetson
 RUN pip install --user -U empy==3.3.4 pyros-genmsg setuptools packaging pymavlink && \
     pip install --user -U transforms3d --upgrade
 
-# Build ROS2 workspace with MAVROS and MAVROSPY
+# Build ROS2 workspace with MAVROS, MAVROSPY, and motion_capture_tracking
 WORKDIR /home/jetson/ros2_ws/src
-RUN git clone -b ros2 https://github.com/bandofpv/mavrospy.git
+RUN git clone -b ros2 https://github.com/bandofpv/mavrospy.git && \
+    git clone --recurse-submodules https://github.com/IMRCLab/motion_capture_tracking.git
 WORKDIR /home/jetson/ros2_ws
 RUN rosinstall_generator --format repos mavlink | tee /tmp/mavlink.repos && \
     rosinstall_generator --format repos --upstream mavros | tee -a /tmp/mavros.repos && \
