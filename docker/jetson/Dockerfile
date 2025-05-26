@@ -17,7 +17,8 @@ RUN apt-get update && apt-get install -y \
 # Install extra ROS2 packages
 RUN apt-get install -y \
     ros-dev-tools \
-    ros-humble-rviz2
+    ros-humble-rviz2 \
+    ros-humble-topic-tools
 
 # Install MAVROS dependencies
 RUN apt-get install -y python3-vcstool \

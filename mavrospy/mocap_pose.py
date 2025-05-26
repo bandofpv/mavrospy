@@ -32,7 +32,7 @@ class MocapPoseConverterNode(Node):
         named_pose = msg.poses[0]
 
         pose_stamped = PoseStamped()
-        pose_stamped.header = named_pose.header
+        pose_stamped.header = msg.header
         pose_stamped.pose = named_pose.pose
 
         self.publisher.publish(pose_stamped)

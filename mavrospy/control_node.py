@@ -5,10 +5,8 @@ import rclpy
 import numpy as np
 from rclpy.node import Node
 from pymavlink import mavutil
-from geographic_msgs.msg import GeoPointStamped
 from geometry_msgs.msg import Pose, PoseStamped
 from mavros_msgs.msg import State, ExtendedState
-from sensor_msgs.msg import NavSatFix, NavSatStatus
 from mavros_msgs.srv import CommandBool, SetMode, CommandHome
 from tf_transformations import quaternion_from_euler, euler_from_quaternion
 from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy, DurabilityPolicy
@@ -36,17 +34,13 @@ class MavrospyController(Node):
         self.create_subscription(State, '/mavros/state', self.state_callback, qos_profile)
         self.create_subscription(PoseStamped, '/mavros/local_position/pose', self.pose_callback, qos_profile)
         self.create_subscription(ExtendedState, '/mavros/extended_state', self.extended_state_callback, qos_profile)
-        self.create_subscription(GeoPointStamped, '/mavros/global_position/gp_origin', self.origin_callback, qos_profile)
-        self.create_subscription(NavSatFix, '/mavros/global_position/global', self.gps_callback, qos_profile)
 
-        # Create publishers
+        # Create publisher
         self.cmd_pos_pub = self.create_publisher(PoseStamped, '/mavros/setpoint_position/local', qos_profile)
-        self.origin_pub = self.create_publisher(GeoPointStamped, '/mavros/global_position/set_gp_origin', qos_profile)
 
         # Create service clients
         self.mode_client = self.create_client(SetMode, '/mavros/set_mode')
         self.arm_client = self.create_client(CommandBool, '/mavros/cmd/arming')
-        self.set_home_client = self.create_client(CommandHome, '/mavros/cmd/set_home')
 
         # ROS messages
         self.pose = Pose()
@@ -58,20 +52,6 @@ class MavrospyController(Node):
         self.pi_2 = math.pi / 2.0
         self.freq = frequency
         self.rate = self.create_rate(frequency)
-        self.target_lat = 38.9853504
-        self.target_lon = -76.4857648
-        self.target_alt = 36.810
-
-        # Status variables
-        self.origin_set = False
-        self.current_gps = NavSatFix()
-        self.current_gps.status.status = NavSatStatus.STATUS_NO_FIX
-
-        # Vision initialization
-        if self.vision:
-            self.set_global_origin()
-            self.wait_for_gps_fix()
-            self.set_home_position()
 
         self.get_logger().info("MavrospyController Initiated")
 
@@ -99,77 +79,6 @@ class MavrospyController(Node):
         """
         self.timestamp = msg.header.stamp
         self.pose = msg.pose
-
-    def origin_callback(self, msg):
-        """
-        Callback for PX4 global origin messages
-
-        params: msg: GeoPointStamped message
-        """
-        # Check if global origin is set to the target location
-        if (msg.position.latitude == self.target_lat and
-                msg.position.longitude == self.target_lon) or not self.vision:
-            self.origin_set = True
-        else:
-            self.get_logger().warn(f"Global origin mismatch: Expected "
-                                   f"({self.target_lat}, {self.target_lon}) but got "
-                                   f"({msg.position.latitude}, {msg.position.longitude})")
-
-    def gps_callback(self, msg):
-        """
-        Callback for PX4 GPS messages
-
-        params: msg: NavSatFix message
-        """
-        self.current_gps = msg
-
-    def set_global_origin(self):
-        """
-        Sets the global origin to the target latitude, longitude, and altitude
-        """
-        self.get_logger().info("Setting global origin...")
-        while rclpy.ok():
-            # Setup GeoPointStamped message
-            origin_msg = GeoPointStamped()
-            origin_msg.header.stamp = self.get_clock().now().to_msg()
-            origin_msg.header.frame_id = "map"
-
-            # Assign lat, long, and alt to the message
-            origin_msg.position.latitude = self.target_lat
-            origin_msg.position.longitude = self.target_lon
-            origin_msg.position.altitude = self.target_alt
-
-            # Publish the message
-            self.origin_pub.publish(origin_msg)
-
-            # Check if the global origin has been set
-            if self.origin_set:
-                self.get_logger().info("Global origin set.")
-                break
-            self.rate.sleep()
-
-    def wait_for_gps_fix(self):
-        """
-        Waits for a GPS fix before continuing
-        """
-        self.get_logger().info("Waiting for GPS fix...")
-        while rclpy.ok():
-            if self.current_gps.status.status == NavSatStatus.STATUS_FIX:
-                self.get_logger().info("GPS fix acquired.")
-                break
-            self.rate.sleep()
-
-    def set_home_position(self):
-        """
-        Sets the home position to the current GPS position
-        """
-        self.get_logger().info("Setting home position...")
-        req = CommandHome.Request()
-        req.current_gps = True
-        if self.set_home_client.call(req).success:
-            self.get_logger().info("Home position set.")
-        else:
-            self.get_logger().error("Failed to set home position.")
 
     def arm(self, status):
         """
@@ -323,19 +232,31 @@ class MavrospyController(Node):
         """
         Set mode to AUTO.LAND for immediate descent and disarm when on ground.
         """
-        self.get_logger().info("Changing mode: AUTO.LAND...")
-        req = SetMode.Request()
-        req.custom_mode = "AUTO.LAND"
-        if self.mode_client.call(req).mode_sent:
-            self.get_logger().info("Mode set: AUTO.LAND")
+        if not self.vision:
+            self.get_logger().info("Changing mode: AUTO.LAND...")
+            req = SetMode.Request()
+            req.custom_mode = "AUTO.LAND"
+            if self.mode_client.call(req).mode_sent:
+                self.get_logger().info("Mode set: AUTO.LAND")
+            else:
+                self.get_logger().error("Failed to set mode: AUTO.LAND")
+
+            # Loop until landed
+            while rclpy.ok():
+                if self.current_extended_state.landed_state == mavutil.mavlink.MAV_LANDED_STATE_ON_GROUND:
+                    self.get_logger().info("Landed")
+                    break
+                self.rate.sleep()
+
+            self.arm(False)  # disarm throttle
+
         else:
-            self.get_logger().error("Failed to set mode: AUTO.LAND")
+            # Get current position
+            current_x = self.pose.position.x
+            current_y = self.pose.position.y
 
-        # Loop until landed
-        while rclpy.ok():
-            if self.current_extended_state.landed_state == mavutil.mavlink.MAV_LANDED_STATE_ON_GROUND:
-                self.get_logger().info("Landed")
-                break
-            self.rate.sleep()
+            # Set the vehicle to land at current position
+            self.get_logger().info("Landing...")
+            self.slow_goto_xyz_rpy(current_x, current_y, 0.0, 0, 0, 0, height=True)
 
-        self.arm(False)  # disarm throttle
+            self.arm(False)  # disarm throttle

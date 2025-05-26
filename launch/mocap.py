@@ -41,21 +41,13 @@ def generate_launch_description():
         output='screen',
     )
 
-    # Relay node (from /qualisys/My_Quad/pose to /mavros/vision_pose/pose)
+    # Relay node (from /quad_pose to /mavros/vision_pose/pose)
     relay_node = Node(
         package='topic_tools',
         executable='relay',
         name='relay_pose',
         output='screen',
         arguments=['/quad_pose', '/mavros/vision_pose/pose']
-    )
-
-    # Fake GPS node
-    fake_gps_node = Node(
-        package='mavrospy',
-        executable='fake_gps_py',
-        name='fake_gps',
-        output='screen'
     )
 
     # Launch mavrospy with specified pattern
@@ -74,6 +66,5 @@ def generate_launch_description():
         mavros_node,
         mocap_node,
         relay_node,
-        fake_gps_node,
         mavrospy_node
     ])
