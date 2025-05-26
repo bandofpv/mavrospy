@@ -1,5 +1,5 @@
 # MAVROSPY
-ROS1 node to interact with [MAVROS](https://wiki.ros.org/mavros) for basic UAV control.
+ROS1 Noetic node to interact with [MAVROS](https://wiki.ros.org/mavros) for basic UAV control.
 
 This current repo is tested on a PX4 (v1.14.3) flight controller with a RPi4 (Ubuntu 22.04 MATE) or Jetson Nano (JetPack 4.6) companion computer.
 
