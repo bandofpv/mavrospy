@@ -31,7 +31,7 @@ def generate_launch_description():
     mavros_node = IncludeLaunchDescription(
         AnyLaunchDescriptionSource(px4_launch_path),
         launch_arguments={'fcu_url': LaunchConfiguration('fcu_url')}.items()
-    ),
+    )
 
     # Mocap pose conversion node
     mocap_node = Node(
