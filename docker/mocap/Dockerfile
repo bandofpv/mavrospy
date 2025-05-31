@@ -66,6 +66,9 @@ WORKDIR /home/mocap/ros2_ws/src
 
 # Clone motion_capture_tracking repository
 RUN git clone --recurse-submodules https://github.com/IMRCLab/motion_capture_tracking
+WORKDIR /home/analysis/ros2_ws/src/motion_capture_tracking
+RUN git reset --hard 35adc3e && \
+    git submodule update --init --recursive
 
 # Build the workspace
 WORKDIR /home/mocap/ros2_ws
@@ -74,7 +77,6 @@ RUN /bin/bash -c "source /opt/ros/humble/setup.bash && colcon build --symlink-in
 # Add start up commands to .bashrc
 RUN echo "source /opt/ros/humble/setup.bash" >> /home/mocap/.bashrc && \
     echo "source /home/mocap/ros2_ws/install/setup.bash" >> /home/mocap/.bashrc && \
-    echo "export ROS_IP=$(hostname -I | awk '{print $1}')" >> /home/mocap/.bashrc && \
     echo "export ROS_DOMAIN_ID=1" >> /home/mocap/.bashrc
 
 # Set the working directory for the mocap user
