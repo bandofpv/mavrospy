@@ -66,7 +66,7 @@ WORKDIR /home/mocap/ros2_ws/src
 
 # Clone motion_capture_tracking repository
 RUN git clone --recurse-submodules https://github.com/IMRCLab/motion_capture_tracking
-WORKDIR /home/analysis/ros2_ws/src/motion_capture_tracking
+WORKDIR /home/mocap/ros2_ws/src/motion_capture_tracking
 RUN git reset --hard 35adc3e && \
     git submodule update --init --recursive
 
