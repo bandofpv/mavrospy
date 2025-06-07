@@ -64,4 +64,4 @@ fi
 
 # Run docker container
 echo "Running $IMAGE_NAME:$IMAGE_TAG."
-docker run -it --rm --privileged --net=host -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v ~/mavrospy/docker/mocap/cfg.yaml:/home/mocap/ros2_ws/src/motion_capture_tracking/motion_capture_tracking/config/cfg.yaml --name $CONTAINER_NAME $IMAGE_NAME:$IMAGE_TAG
+docker run -it --rm --net=host -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v ~/mavrospy/docker/mocap/cfg.yaml:/home/mocap/ros2_ws/src/motion_capture_tracking/motion_capture_tracking/config/cfg.yaml --name $CONTAINER_NAME $IMAGE_NAME:$IMAGE_TAG
