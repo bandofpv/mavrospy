@@ -7,4 +7,4 @@ Documentation for motion capture utilizes the [Qualisys Track Manager]("https://
 
 ## Usage and Setup
 
-[Tutorial](https://www.bandofpv.github.io/docs/tutorials/robots/mavrospy)
+[Tutorial](https://bandofpv.github.io/docs/tutorials/robots/mavrospy)
